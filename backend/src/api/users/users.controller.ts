@@ -1,14 +1,26 @@
-import { Controller, Get, BadGatewayException, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  BadGatewayException,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 import { PaginatorDto, PaginatorResponseDto } from 'src/utils/paginator';
+import { Role } from 'src/common/enums/role.enum';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,

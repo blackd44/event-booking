@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from 'src/common/enums/role.enum';
 
 @Entity('users')
 export class User {
@@ -27,6 +28,10 @@ export class User {
 
   @Column()
   password!: string;
+
+  @ApiProperty({ enum: Role, description: 'User role' })
+  @Column({ type: 'enum', enum: Role, default: Role.CUSTOMER })
+  role!: Role;
 
   @ApiProperty({ description: 'Creation timestamp' })
   @CreateDateColumn()
