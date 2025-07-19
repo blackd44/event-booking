@@ -4,6 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { errorMessage } from 'src/utils/error';
+import {
+  PaginatorDto,
+  PaginatorResponse,
+  Paginators,
+} from 'src/utils/paginator';
 
 @Injectable()
 export class UsersService {
@@ -36,10 +41,17 @@ export class UsersService {
     }
   }
 
-  async findAll() {
+  async findAll(body: PaginatorDto) {
     try {
-      const users = await this.userRepository.find();
-      return { data: users };
+      const { skip, limit, sorts } = Paginators(body);
+
+      const [data, count] = await this.userRepository.findAndCount({
+        order: sorts,
+        skip: skip,
+        take: limit,
+      });
+
+      return { data: PaginatorResponse(data, count, limit, skip) };
     } catch (error: unknown) {
       return { error: errorMessage(error) };
     }
