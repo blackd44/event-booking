@@ -6,12 +6,16 @@ import { Events } from './entities/event.entity';
 import { errorMessage } from 'src/utils/error';
 import { PaginatorResponse, Paginators } from 'src/utils/paginator';
 import { getMinMaxFilter } from 'src/utils/query';
+import { Booking } from '../bookings/entities/booking.entity';
+import { BookingStatus } from 'src/common/enums/booking-status.enum';
 
 @Injectable()
 export class EventsService {
   constructor(
     @InjectRepository(Events)
     private eventRepository: Repository<Events>,
+    @InjectRepository(Booking)
+    private bookingRepository: Repository<Booking>,
   ) {}
 
   async create(createEventDto: CreateEventDto) {
@@ -44,6 +48,17 @@ export class EventsService {
         take: limit,
       });
 
+      // Calculate available spots for each event
+      for (const event of events) {
+        const bookedCount = await this.bookingRepository.count({
+          where: {
+            event: { id: event.id },
+            status: BookingStatus.CONFIRMED,
+          },
+        });
+        event.availableSpots = event.capacity - bookedCount;
+      }
+
       return { data: PaginatorResponse(events, count, limit, skip) };
     } catch (error) {
       return { error: errorMessage(error) };
@@ -54,7 +69,16 @@ export class EventsService {
     const event = await this.eventRepository.findOne({ where: { id } });
     if (!event) throw new NotFoundException('Event not found');
 
-    return { event };
+    // Calculate available spots
+    const bookedCount = await this.bookingRepository.count({
+      where: {
+        event: { id: event.id },
+        status: BookingStatus.CONFIRMED,
+      },
+    });
+    event.availableSpots = event.capacity - bookedCount;
+
+    return { event, bookedCount };
   }
 
   async update(id: string, updateEventDto: UpdateEventDto) {
@@ -66,5 +90,19 @@ export class EventsService {
   async remove(id: string): Promise<void> {
     const { event } = await this.findOne(id);
     await this.eventRepository.remove(event);
+  }
+
+  async getEventBookings(eventId: string) {
+    await this.findOne(eventId);
+    return this.bookingRepository.find({
+      where: { event: { id: eventId } },
+      relations: ['user'],
+    });
+  }
+
+  async getAvailableSpots(eventId: string) {
+    const { event, bookedCount } = await this.findOne(eventId);
+
+    return event.capacity - bookedCount;
   }
 }

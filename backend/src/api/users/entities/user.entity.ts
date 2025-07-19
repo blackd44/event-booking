@@ -4,13 +4,15 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/common/enums/role.enum';
+import { Booking } from 'src/api/bookings/entities/booking.entity';
 
 @Entity('users')
 export class User {
-  @ApiProperty({ description: 'User ID' })
+  // @ApiProperty({ description: 'User ID' })
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -40,4 +42,7 @@ export class User {
   @ApiProperty({ description: 'Update timestamp' })
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @OneToMany(() => Booking, (booking) => booking.user)
+  bookings!: Booking[];
 }

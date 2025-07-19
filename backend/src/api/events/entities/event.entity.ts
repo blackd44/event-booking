@@ -4,12 +4,14 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Booking } from 'src/api/bookings/entities/booking.entity';
 
 @Entity('events')
 export class Events {
-  @ApiProperty({ description: 'Event ID' })
+  // @ApiProperty({ description: 'Event ID' })
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -44,6 +46,9 @@ export class Events {
   @ApiProperty({ description: 'Update timestamp' })
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @OneToMany(() => Booking, (booking) => booking.event)
+  bookings!: Booking[];
 
   @ApiProperty({ description: 'Available spots' })
   availableSpots?: number;
