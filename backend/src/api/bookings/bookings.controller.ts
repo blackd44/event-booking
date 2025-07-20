@@ -21,8 +21,8 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { PaginatorDto, PaginatorResponseDto } from 'src/utils/paginator';
 
+@Controller()
 @ApiTags('bookings')
-@Controller('bookings')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class BookingsController {

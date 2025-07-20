@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ApiModule } from './api/api.module';
+import { ApiModule, ApiRoutes } from './api/api.module';
 import configuration from './config/configuration';
+import { RouterModule } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import configuration from './config/configuration';
       synchronize: process.env.NODE_ENV !== 'production',
     }),
     ApiModule,
+    RouterModule.register([...ApiRoutes]),
   ],
   controllers: [],
   providers: [],

@@ -21,8 +21,8 @@ import { PaginatorResponseDto } from 'src/utils/paginator';
 import { Events } from './entities/event.entity';
 import { Booking } from '../bookings/entities/booking.entity';
 
+@Controller()
 @ApiTags('events')
-@Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 

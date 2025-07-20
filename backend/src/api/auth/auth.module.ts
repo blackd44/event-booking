@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { Routes } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -25,3 +26,5 @@ import { LocalStrategy } from './strategies/local.strategy';
   controllers: [AuthController],
 })
 export class AuthModule {}
+
+export const AuthRoutes: Routes = [{ path: 'auth', module: AuthModule }];

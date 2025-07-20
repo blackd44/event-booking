@@ -4,6 +4,7 @@ import { EventsController } from './events.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Events } from './entities/event.entity';
 import { Booking } from '../bookings/entities/booking.entity';
+import { Routes } from '@nestjs/core';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Events, Booking])],
@@ -12,3 +13,5 @@ import { Booking } from '../bookings/entities/booking.entity';
   exports: [EventsService],
 })
 export class EventsModule {}
+
+export const EventsRoutes: Routes = [{ path: 'events', module: EventsModule }];
