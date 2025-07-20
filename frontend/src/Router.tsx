@@ -10,6 +10,9 @@ const AuthLayout = lazy(() => import("./components/layout/auth"));
 const LoginPage = lazy(() => import("./pages/auth/login"));
 const RegisterPage = lazy(() => import("./pages/auth/register"));
 
+const DashboardLayout = lazy(() => import("./components/layout/dashboard"));
+const DashboardPage = lazy(() => import("./pages/dashboard/index"));
+
 export default function Router() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -23,6 +26,10 @@ export default function Router() {
         <Route path="/" element={<AuthLayout />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+        </Route>
+
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardPage />} />
         </Route>
       </Routes>
     </Suspense>

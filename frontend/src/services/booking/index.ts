@@ -1,6 +1,6 @@
 import { handleError } from "@/lib/error";
 import { baseInstance } from "../axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 interface IBookingRequest {
@@ -30,5 +30,31 @@ export function useCreateBooking() {
       queryClient.invalidateQueries({ queryKey: ["event", variables.eventId] });
     },
     onError: (err) => handleError(err, "Failed to book ticket"),
+  });
+}
+
+export interface IBooking {
+  id: string;
+  event: {
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    date: string;
+    price: number;
+  };
+  status: "active" | "cancelled";
+  bookedAt: string;
+}
+
+export function useBookings() {
+  return useQuery({
+    queryKey: ["bookings"],
+    queryFn: async () => {
+      const response = await baseInstance.get<IBooking[]>("/bookings");
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
   });
 }

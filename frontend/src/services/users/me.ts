@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { baseInstance } from "../axios";
 import { handleError } from "@/lib/error";
-import { DEMO_CREDENTIALS } from "@/constants/demo-credentials";
 
 // types
 export interface IUser {
@@ -50,27 +49,26 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (credentials: ILoginRequest) => {
       // Check for demo credentials
-      const users = Object.entries(DEMO_CREDENTIALS);
+      // const users = Object.entries(DEMO_CREDENTIALS);
+      // const user = users.find(([, value]) => {
+      //   return (
+      //     value.email === credentials.email &&
+      //     value.password === credentials.password
+      //   );
+      // });
+      // if (user) {
+      //   // Return dummy response for demo user
+      //   return {
+      //     token: "demo-token",
+      //     user: {
+      //       id: "demo-id",
+      //       email: user?.[1].email,
+      //       name: "Demo User",
+      //       role: user?.[0],
+      //     } as IUser,
+      //   };
+      // }
 
-      const user = users.find(([, value]) => {
-        return (
-          value.email === credentials.email &&
-          value.password === credentials.password
-        );
-      });
-
-      if (user) {
-        // Return dummy response for demo user
-        return {
-          token: "demo-token",
-          user: {
-            id: "demo-id",
-            email: user?.[1].email,
-            name: "Demo User",
-            role: user?.[0],
-          } as IUser,
-        };
-      }
       // Otherwise, proceed with real API call
       const res = await baseInstance
         .post<IAuthResponse>("/auth/login", credentials)
