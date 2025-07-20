@@ -12,6 +12,11 @@ const RegisterPage = lazy(() => import("./pages/auth/register"));
 
 const DashboardLayout = lazy(() => import("./components/layout/dashboard"));
 const DashboardPage = lazy(() => import("./pages/dashboard/index"));
+const CustomerBookingsPage = lazy(() => import("./pages/dashboard/bookings"));
+
+const AdminDashboardPage = lazy(() => import("./pages/admin"));
+const AdminEventsPage = lazy(() => import("./pages/admin/events"));
+const CreateEventPage = lazy(() => import("./pages/admin/events/new"));
 
 export default function Router() {
   return (
@@ -28,8 +33,22 @@ export default function Router() {
           <Route path="register" element={<RegisterPage />} />
         </Route>
 
-        <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route
+          path="/dashboard"
+          element={<DashboardLayout requiredRoles={["customer"]} />}
+        >
           <Route index element={<DashboardPage />} />
+          <Route path="register" element={<RegisterPage />} />
+          <Route path="bookings" element={<CustomerBookingsPage />} />
+        </Route>
+
+        <Route
+          path="/admin"
+          element={<DashboardLayout requiredRoles={["admin"]} />}
+        >
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="events" element={<AdminEventsPage />} />
+          <Route path="events/new" element={<CreateEventPage />} />
         </Route>
       </Routes>
     </Suspense>

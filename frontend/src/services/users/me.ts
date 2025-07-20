@@ -7,7 +7,8 @@ import { handleError } from "@/lib/error";
 export interface IUser {
   id: string;
   email: string;
-  name: string;
+  lastName: string;
+  firstName: string;
   role: "admin" | "customer";
 }
 
@@ -19,12 +20,13 @@ export interface ILoginRequest {
 export interface IRegisterRequest {
   email: string;
   password: string;
-  name: string;
+  lastName: string;
+  firstName: string;
   role: "admin" | "customer";
 }
 
 export interface IAuthResponse {
-  token: string;
+  access_token: string;
   user: IUser;
 }
 
@@ -34,7 +36,10 @@ export function useMe() {
 
   return useQuery({
     queryKey: ["auth", "me"],
-    queryFn: () => baseInstance.get<IUser>("/auth/me").then((res) => res.data),
+    queryFn: () =>
+      baseInstance
+        .get<{ user: IUser }>("/auth/me")
+        .then((res) => res?.data?.user),
     enabled: !!token,
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -76,7 +81,7 @@ export function useLogin() {
       return res;
     },
     onSuccess: (data) => {
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("token", data?.access_token);
       queryClient.setQueryData(["auth", "me"], data.user);
       navigate(data.user.role === "admin" ? "/admin" : "/dashboard");
     },
@@ -95,7 +100,7 @@ export function useRegister() {
         .post<IAuthResponse>("/auth/register", data)
         .then((res) => res.data),
     onSuccess: (data) => {
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("token", data?.access_token);
       queryClient.setQueryData(["auth", "me"], data.user);
       navigate(data.user.role === "admin" ? "/admin" : "/dashboard");
     },

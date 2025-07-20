@@ -58,3 +58,21 @@ export function useBookings() {
     retry: 2,
   });
 }
+
+export function useCancelBooking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await baseInstance.put(`/bookings/${bookingId}`, {
+        status: "cancelled",
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      // refetch bookings data
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+    onError: (err) => handleError(err, "Failed to cancel booking"),
+  });
+}

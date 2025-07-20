@@ -63,4 +63,22 @@ export class AuthService {
       },
     };
   }
+
+  async me(userData: User) {
+    const { data: user, error } = await this.usersService.findById(
+      userData?.id,
+    );
+
+    if (error) throw new ConflictException('Error finding user');
+
+    return {
+      user: {
+        id: user?.id,
+        email: user?.email,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        role: user?.role,
+      },
+    };
+  }
 }

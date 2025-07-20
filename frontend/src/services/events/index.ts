@@ -1,5 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { baseInstance } from "../axios";
+import type { TPaginateRes } from "@/types/pagination";
+import { useToast } from "@/hooks/use-toast";
+import { handleError } from "@/lib/error";
+import type { CreateEventFormData } from "@/pages/admin/events/new";
+import { useNavigate } from "react-router-dom";
 
 export interface IEvent {
   id: string;
@@ -16,7 +21,7 @@ export function useEvents() {
   return useQuery({
     queryKey: ["events"],
     queryFn: () =>
-      baseInstance.get<IEvent[]>("/events").then((res) => res.data),
+      baseInstance.get<TPaginateRes<IEvent>>("/events").then((res) => res.data),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
   });
@@ -46,3 +51,75 @@ export function useEvent(id: string) {
     retry: 2,
   });
 }
+
+export const useDeleteEvent = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (eventId: string) => {
+      await baseInstance.delete(`/events/${eventId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "events"] });
+      toast({
+        title: "Success",
+        description: "Event deleted successfully",
+      });
+    },
+    onError: (err: unknown) => {
+      const message = handleError(err, "Failed to delete event", true);
+
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+
+interface CreateEventPayload {
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  capacity: number;
+  price: number;
+}
+
+export const useCreateEvent = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: async (data: CreateEventFormData): Promise<void> => {
+      const payload: CreateEventPayload = data;
+
+      await baseInstance.post("/events", payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      // Invalidate and refetch events list
+      queryClient.invalidateQueries({ queryKey: ["admin", "events"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+
+      toast({
+        title: "Success",
+        description: "Event created successfully!",
+      });
+      navigate("/admin/events");
+    },
+    onError: (error: unknown) => {
+      const errorMessage = handleError(error, "Failed to create event", true);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+};

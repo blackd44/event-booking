@@ -16,14 +16,14 @@ export function DashboardSidebar() {
   const { user, logout } = useAuth();
 
   const adminNavItems = [
-    { href: "/admin", icon: Home, label: "Overview" },
+    { href: "/admin", icon: Home, label: "Overview", end: true },
     { href: "/admin/events", icon: Calendar, label: "Events" },
     { href: "/admin/bookings", icon: Ticket, label: "Bookings" },
     { href: "/admin/users", icon: Users, label: "Users" },
   ];
 
   const customerNavItems = [
-    { href: "/dashboard", icon: Home, label: "Overview" },
+    { href: "/dashboard", icon: Home, label: "Overview", end: true },
     { href: "/dashboard/bookings", icon: Ticket, label: "My Bookings" },
     { href: "/dashboard/profile", icon: User, label: "Profile" },
     { href: "/dashboard/payments", icon: CreditCard, label: "Payments" },
@@ -52,7 +52,7 @@ export function DashboardSidebar() {
             <User className="h-5 w-5 text-white" />
           </div>
           <div>
-            <p className="font-medium text-gray-900">{user?.name}</p>
+            <p className="font-medium text-gray-900">{user?.firstName}</p>
             <p className="text-sm text-gray-500 capitalize">{user?.role}</p>
           </div>
         </div>
@@ -63,8 +63,9 @@ export function DashboardSidebar() {
         {navItems.map((item) => {
           return (
             <NavLink
-              key={item.href}
-              to={item.href}
+              end={item?.end}
+              key={item?.href}
+              to={item?.href}
               className={({ isActive }) =>
                 cn(
                   "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group",

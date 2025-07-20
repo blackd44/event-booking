@@ -15,7 +15,7 @@ import { useEffect } from "react";
 
 export default function EventsPage() {
   const { toast } = useToast();
-  const { data: events = [], isLoading, error } = useEvents();
+  const { data, isLoading, error } = useEvents();
 
   useEffect(() => {
     if (error)
@@ -39,7 +39,7 @@ export default function EventsPage() {
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full size-32 border-b-2 border-primary" />
         </div>
-      ) : events?.length == 0 ? (
+      ) : data?.results?.length == 0 ? (
         <div className="text-center py-12">
           <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-600 mb-2">
@@ -49,7 +49,7 @@ export default function EventsPage() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
+          {data?.results?.map((event) => (
             <Card key={event.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">

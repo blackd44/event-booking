@@ -58,7 +58,7 @@ export function Header() {
                   <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
                     <User className="h-4 w-4 text-white" />
                   </div>
-                  <span className="font-medium">{user.name}</span>
+                  <span className="font-medium">{user?.firstName}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 shadow-elegant">
@@ -136,7 +136,7 @@ export function Header() {
                   <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
                     <User className="h-4 w-4 text-white" />
                   </div>
-                  <span className="font-medium">{user.name}</span>
+                  <span className="font-medium">{user?.firstName}</span>
                 </div>
                 <Button
                   variant="ghost"
