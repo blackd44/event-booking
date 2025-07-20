@@ -1,4 +1,3 @@
-import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Calendar, Users, Shield, Zap, ArrowRight } from "lucide-react";
@@ -6,9 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
-
+    <>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 gradient-bg opacity-90"></div>
@@ -170,23 +167,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <div className="p-2 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl">
-                <Calendar className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold">EventBook</span>
-            </div>
-            <div className="text-gray-400">
-              © 2024 EventBook. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
