@@ -3,20 +3,14 @@ import {
   useLogout,
   useMe,
   useRegister,
-  type AuthResponse,
-  type LoginRequest,
-  type RegisterRequest,
+  type IAuthResponse,
+  type ILoginRequest,
+  type IRegisterRequest,
+  type IUser,
 } from "@/services/users/me";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type React from "react";
 import { createContext } from "react";
-
-interface IUser {
-  id: string;
-  email: string;
-  name: string;
-  role: "admin" | "customer";
-}
 
 interface AuthContextType {
   user: IUser | null;
@@ -30,11 +24,11 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
 
-  loginMutation: UseMutationResult<AuthResponse, Error, LoginRequest, unknown>;
+  loginMutation: UseMutationResult<IAuthResponse, Error, ILoginRequest, unknown>;
   registerMutation: UseMutationResult<
-    AuthResponse,
+    IAuthResponse,
     Error,
-    RegisterRequest,
+    IRegisterRequest,
     unknown
   >;
 }

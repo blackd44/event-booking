@@ -8,6 +8,7 @@ const SingleEventPage = lazy(() => import("./pages/events/id"));
 
 const AuthLayout = lazy(() => import("./components/layout/auth"));
 const LoginPage = lazy(() => import("./pages/auth/login"));
+const RegisterPage = lazy(() => import("./pages/auth/register"));
 
 export default function Router() {
   return (
@@ -21,6 +22,7 @@ export default function Router() {
 
         <Route path="/" element={<AuthLayout />}>
           <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
         </Route>
       </Routes>
     </Suspense>

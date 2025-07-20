@@ -1,24 +1,30 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { baseInstance } from "../axios";
-import type { IUser } from "@/contexts/auth-context";
 import { handleError } from "@/lib/error";
 import { DEMO_CREDENTIALS } from "@/constants/demo-credentials";
 
 // types
-export interface LoginRequest {
+export interface IUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "admin" | "customer";
+}
+
+export interface ILoginRequest {
   email: string;
   password: string;
 }
 
-export interface RegisterRequest {
+export interface IRegisterRequest {
   email: string;
   password: string;
   name: string;
   role: "admin" | "customer";
 }
 
-export interface AuthResponse {
+export interface IAuthResponse {
   token: string;
   user: IUser;
 }
@@ -42,7 +48,7 @@ export function useLogin() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (credentials: LoginRequest) => {
+    mutationFn: async (credentials: ILoginRequest) => {
       // Check for demo credentials
       const users = Object.entries(DEMO_CREDENTIALS);
 
@@ -67,7 +73,7 @@ export function useLogin() {
       }
       // Otherwise, proceed with real API call
       const res = await baseInstance
-        .post<AuthResponse>("/auth/login", credentials)
+        .post<IAuthResponse>("/auth/login", credentials)
         .then((res) => res.data);
       return res;
     },
@@ -86,9 +92,9 @@ export function useRegister() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: RegisterRequest) =>
+    mutationFn: (data: IRegisterRequest) =>
       baseInstance
-        .post<AuthResponse>("/auth/register", data)
+        .post<IAuthResponse>("/auth/register", data)
         .then((res) => res.data),
     onSuccess: (data) => {
       localStorage.setItem("token", data.token);
