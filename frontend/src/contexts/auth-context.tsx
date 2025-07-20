@@ -1,4 +1,13 @@
-import { useLogin, useLogout, useMe, useRegister } from "@/services/users/me";
+import {
+  useLogin,
+  useLogout,
+  useMe,
+  useRegister,
+  type AuthResponse,
+  type LoginRequest,
+  type RegisterRequest,
+} from "@/services/users/me";
+import type { UseMutationResult } from "@tanstack/react-query";
 import type React from "react";
 import { createContext } from "react";
 
@@ -20,6 +29,14 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => void;
   loading: boolean;
+
+  loginMutation: UseMutationResult<AuthResponse, Error, LoginRequest, unknown>;
+  registerMutation: UseMutationResult<
+    AuthResponse,
+    Error,
+    RegisterRequest,
+    unknown
+  >;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,6 +68,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         loading: isLoading,
+
+        loginMutation,
+        registerMutation,
       }}
     >
       {children}
