@@ -17,6 +17,8 @@ const CustomerBookingsPage = lazy(() => import("./pages/dashboard/bookings"));
 const AdminDashboardPage = lazy(() => import("./pages/admin"));
 const AdminEventsPage = lazy(() => import("./pages/admin/events"));
 const CreateEventPage = lazy(() => import("./pages/admin/events/new"));
+const EditEventPage = lazy(() => import("./pages/admin/events/edit"));
+const AdminBookingsPage = lazy(() => import("./pages/admin/bookings"));
 
 export default function Router() {
   return (
@@ -49,6 +51,9 @@ export default function Router() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="events" element={<AdminEventsPage />} />
           <Route path="events/new" element={<CreateEventPage />} />
+          <Route path="events/:id/edit" element={<EditEventPage />} />
+
+          <Route path="bookings" element={<AdminBookingsPage />} />
         </Route>
       </Routes>
     </Suspense>

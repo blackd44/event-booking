@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { handleError } from "@/lib/error";
 import type { CreateEventFormData } from "@/pages/admin/events/new";
 import { useNavigate } from "react-router-dom";
+import type { EditEventFormData } from "@/pages/admin/events/edit";
 
 export interface IEvent {
   id: string;
@@ -115,6 +116,54 @@ export const useCreateEvent = () => {
     },
     onError: (error: unknown) => {
       const errorMessage = handleError(error, "Failed to create event", true);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+
+interface UpdateEventPayload {
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  capacity: number;
+  price: number;
+}
+
+export const useUpdateEvent = (id: string) => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: async (data: EditEventFormData): Promise<Event> => {
+      const payload: UpdateEventPayload = data;
+      const response = await baseInstance.patch<Event>(`/events/${id}`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+      return response.data;
+    },
+    onSuccess: (updatedEvent) => {
+      // Update cache with new data
+      queryClient.setQueryData(["event", id], updatedEvent);
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ["admin", "events"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+
+      toast({
+        title: "Success",
+        description: "Event updated successfully!",
+      });
+      navigate("/admin/events");
+    },
+    onError: (error: unknown) => {
+      const errorMessage = handleError(error, "Failed to update event", true);
+      
       toast({
         title: "Error",
         description: errorMessage,
