@@ -45,7 +45,7 @@ export function sortFields(str?: string) {
         return [f.join(''), -1];
       }
     })
-    ?.filter?.((word) => word?.length == 2);
+    ?.filter?.((word) => word?.length == 2 && !!word?.[0]);
 
   const output: Record<string, number> = Object.fromEntries(
     fields as [string, number][],

@@ -30,7 +30,7 @@ export class BookingsService {
       createBookingDto.eventId,
     );
 
-    const quantity = createBookingDto.quantity ?? 1;
+    const quantity = createBookingDto?.quantity ?? 1;
 
     // Check if event is in the future
     if (event.date <= new Date())

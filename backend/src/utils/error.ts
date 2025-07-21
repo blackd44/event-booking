@@ -4,7 +4,7 @@ export function errorMessage(
 ): string {
   let err = defaultError;
   if (typeof error === 'object' && error !== null && 'message' in error)
-    err = (error as { message: string }).message;
+    err = (error as { message: string })?.message?.toString() ?? defaultError;
 
   return err;
 }

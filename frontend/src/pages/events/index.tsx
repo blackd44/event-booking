@@ -12,10 +12,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useEvents } from "@/services/events";
 import { useEffect } from "react";
+import { apiUrl } from "@/services/axios";
 
 export default function EventsPage() {
   const { toast } = useToast();
   const { data, isLoading, error } = useEvents();
+
+  useEffect(() => {
+    toast({
+      title: apiUrl,
+    });
+  }, [toast]);
 
   useEffect(() => {
     if (error)
