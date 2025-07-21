@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { baseInstance } from "../axios";
 import { handleError } from "@/lib/error";
+import type { ERole, EUserStatus } from "@/types/enums";
 
 // types
 export interface IUser {
@@ -9,7 +10,9 @@ export interface IUser {
   email: string;
   lastName: string;
   firstName: string;
-  role: "admin" | "customer";
+  role: ERole;
+  status: EUserStatus;
+  createdAt: Date;
 }
 
 export interface ILoginRequest {
@@ -22,7 +25,7 @@ export interface IRegisterRequest {
   password: string;
   lastName: string;
   firstName: string;
-  role: "admin" | "customer";
+  role: ERole;
 }
 
 export interface IAuthResponse {

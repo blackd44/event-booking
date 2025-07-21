@@ -92,7 +92,15 @@ export default function RegisterPage() {
   });
 
   const handleSubmit = (data: RegisterFormData) => {
-    register?.(data.email, data.password, data.name, data.role);
+    const [firstName, ...lastName] = data.name.split(" ");
+
+    register?.(
+      data.email,
+      data.password,
+      firstName,
+      lastName.join(" "),
+      data.role
+    );
   };
 
   const togglePasswordVisibility = () => {

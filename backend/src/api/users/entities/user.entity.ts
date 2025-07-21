@@ -9,6 +9,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from 'src/common/enums/role.enum';
 import { Booking } from 'src/api/bookings/entities/booking.entity';
+import { EUserStatus } from 'src/common/enums/user-status.enum';
 
 @Entity('users')
 export class User {
@@ -27,6 +28,10 @@ export class User {
   @ApiProperty({ description: 'User last name' })
   @Column()
   lastName!: string;
+
+  @ApiProperty({ description: 'User status' })
+  @Column({ default: EUserStatus.active, type: String })
+  status!: EUserStatus;
 
   @Column()
   password!: string;

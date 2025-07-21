@@ -8,6 +8,7 @@ import {
   type IRegisterRequest,
   type IUser,
 } from "@/services/users/me";
+import type { ERole } from "@/types/enums";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type React from "react";
 import { createContext } from "react";
@@ -18,13 +19,19 @@ interface AuthContextType {
   register: (
     email: string,
     password: string,
-    name: string,
-    role: "admin" | "customer"
+    firstName: string,
+    lastName: string,
+    role: ERole
   ) => Promise<void>;
   logout: () => void;
   loading: boolean;
 
-  loginMutation: UseMutationResult<IAuthResponse, Error, ILoginRequest, unknown>;
+  loginMutation: UseMutationResult<
+    IAuthResponse,
+    Error,
+    ILoginRequest,
+    unknown
+  >;
   registerMutation: UseMutationResult<
     IAuthResponse,
     Error,
@@ -48,10 +55,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (
     email: string,
     password: string,
-    name: string,
-    role: "admin" | "customer"
+    firstName: string,
+    lastName: string,
+    role: ERole
   ) => {
-    await registerMutation.mutateAsync({ email, password, name, role });
+    await registerMutation.mutateAsync({
+      email,
+      password,
+      firstName,
+      lastName,
+      role,
+    });
   };
 
   return (

@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
+import type { ERole } from "@/types/enums";
 import type React from "react";
 
 import { useEffect, useMemo } from "react";
@@ -6,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRoles?: ("admin" | "customer")[];
+  requiredRoles?: ERole[];
 }
 
 export function ProtectedRoute({

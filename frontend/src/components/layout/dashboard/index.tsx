@@ -1,9 +1,10 @@
 import { Outlet } from "react-router-dom";
 import { DashboardSidebar } from "./sidebar";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import type { ERole } from "@/types/enums";
 
 interface DashboardLayoutProps {
-  requiredRoles?: ("admin" | "customer")[];
+  requiredRoles?: ERole[];
 }
 
 export default function DashboardLayout({
