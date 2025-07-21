@@ -1,12 +1,4 @@
-import {
-  Calendar,
-  Users,
-  Ticket,
-  LogOut,
-  Home,
-  User,
-  CreditCard,
-} from "lucide-react";
+import { Calendar, Users, Ticket, LogOut, Home, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -25,8 +17,8 @@ export function DashboardSidebar() {
   const customerNavItems = [
     { href: "/dashboard", icon: Home, label: "Overview", end: true },
     { href: "/dashboard/bookings", icon: Ticket, label: "My Bookings" },
-    { href: "/dashboard/profile", icon: User, label: "Profile" },
-    { href: "/dashboard/payments", icon: CreditCard, label: "Payments" },
+    // { href: "/dashboard/profile", icon: User, label: "Profile" },
+    // { href: "/dashboard/payments", icon: CreditCard, label: "Payments" },
   ];
 
   const navItems = user?.role === "admin" ? adminNavItems : customerNavItems;

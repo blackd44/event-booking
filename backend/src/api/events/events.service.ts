@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEventDto, FindEventsDto, UpdateEventDto } from './dto/event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { Events } from './entities/event.entity';
 import { errorMessage } from 'src/utils/error';
 import { PaginatorResponse, Paginators } from 'src/utils/paginator';
-import { getMinMaxFilter } from 'src/utils/query';
+import { getMinMaxFilter, mergeWhere } from 'src/utils/query';
 import { Booking } from '../bookings/entities/booking.entity';
 import { BookingStatus } from 'src/common/enums/booking-status.enum';
+import moment from 'moment';
 
 @Injectable()
 export class EventsService {
@@ -30,19 +31,48 @@ export class EventsService {
 
   async findAll(params: FindEventsDto) {
     try {
-      const { min_date, max_date } = params;
+      const { min_date, max_date, q } = params;
 
       const { skip, limit, sorts } = Paginators({
         ...params,
         sort_by: params?.sort_by || 'date',
       });
 
-      const minDate = min_date ? new Date(min_date) : null;
-      const maxDate = max_date ? new Date(max_date) : null;
+      let minDate = min_date ? moment(min_date).toDate() : null;
+      let maxDate = max_date ? moment(max_date).toDate() : null;
+
+      if (
+        minDate &&
+        moment(minDate).hour() === 0 &&
+        moment(minDate).minute() === 0
+      ) {
+        minDate = moment(minDate).startOf('day').toDate();
+      }
+      if (
+        maxDate &&
+        moment(maxDate).hour() === 0 &&
+        moment(maxDate).minute() === 0
+      ) {
+        maxDate = moment(maxDate).endOf('day').toDate();
+      }
+
       const dateFilter = getMinMaxFilter(minDate, maxDate);
 
+      const searchWhere: FindOptionsWhere<Events>[] = q
+        ? [
+            { title: ILike(`%${q}%`) },
+            { description: ILike(`%${q}%`) },
+            { location: ILike(`%${q}%`) },
+          ]
+        : [];
+
+      const normalWhere: FindOptionsWhere<Events> = {
+        ...(dateFilter ? { date: dateFilter } : {}),
+      };
+      const where = mergeWhere(searchWhere, normalWhere);
+
       const [events, count] = await this.eventRepository.findAndCount({
-        where: { ...(dateFilter ? { date: dateFilter } : {}) },
+        where,
         order: sorts,
         skip: skip,
         take: limit,

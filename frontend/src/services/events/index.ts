@@ -18,11 +18,13 @@ export interface IEvent {
   bookedCount: number;
 }
 
-export function useEvents() {
+export function useEvents({ q }: { q?: string } = {}) {
   return useQuery({
-    queryKey: ["events"],
+    queryKey: ["events", q],
     queryFn: () =>
-      baseInstance.get<TPaginateRes<IEvent>>("/events").then((res) => res.data),
+      baseInstance
+        .get<TPaginateRes<IEvent>>("/events", { params: { q } })
+        .then((res) => res?.data),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
   });
@@ -80,7 +82,6 @@ export const useDeleteEvent = () => {
   });
 };
 
-
 interface CreateEventPayload {
   title: string;
   description: string;
@@ -125,7 +126,6 @@ export const useCreateEvent = () => {
   });
 };
 
-
 interface UpdateEventPayload {
   title: string;
   description: string;
@@ -143,9 +143,13 @@ export const useUpdateEvent = (id: string) => {
   return useMutation({
     mutationFn: async (data: EditEventFormData): Promise<Event> => {
       const payload: UpdateEventPayload = data;
-      const response = await baseInstance.patch<Event>(`/events/${id}`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await baseInstance.patch<Event>(
+        `/events/${id}`,
+        payload,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
       return response.data;
     },
     onSuccess: (updatedEvent) => {
@@ -163,7 +167,7 @@ export const useUpdateEvent = (id: string) => {
     },
     onError: (error: unknown) => {
       const errorMessage = handleError(error, "Failed to update event", true);
-      
+
       toast({
         title: "Error",
         description: errorMessage,

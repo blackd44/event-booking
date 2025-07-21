@@ -7,7 +7,7 @@ import {
 import { CreateBookingDto, FindBookingDto } from './dto/create-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Booking } from './entities/booking.entity';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, MoreThanOrEqual, Repository } from 'typeorm';
 import { EventsService } from '../events/events.service';
 import { BookingStatus } from 'src/common/enums/booking-status.enum';
 import { PaginatorResponse, Paginators } from 'src/utils/paginator';
@@ -109,6 +109,7 @@ export class BookingsService {
             { user: { lastName: ILike(`%${q}%`) } },
             { event: { title: ILike(`%${q}%`) } },
             { event: { description: ILike(`%${q}%`) } },
+            { event: { location: ILike(`%${q}%`) } },
           ]
         : [];
       const where: FindOptionsWhere<Booking> | FindOptionsWhere<Booking>[] =
@@ -126,12 +127,19 @@ export class BookingsService {
 
       let confirmed = 0;
       let cancelled = 0;
+      let upComming = 0;
       let revenue = null;
 
       if (show_stats)
-        [confirmed, cancelled, revenue] = await Promise.all([
+        [confirmed, upComming, cancelled, revenue] = await Promise.all([
           this.bookingRepository.count({
             where: mergeWhere(where, { status: BookingStatus.CONFIRMED }),
+          }),
+          this.bookingRepository.count({
+            where: mergeWhere(where, {
+              status: BookingStatus.CONFIRMED,
+              event: { date: MoreThanOrEqual(new Date()) },
+            }),
           }),
           this.bookingRepository.count({
             where: mergeWhere(where, { status: BookingStatus.CANCELLED }),
@@ -143,7 +151,14 @@ export class BookingsService {
         data: {
           ...PaginatorResponse(data, count, limit, skip),
           ...(show_stats
-            ? { stats: { confirmed, cancelled, revenue: revenue || 0 } }
+            ? {
+                stats: {
+                  confirmed,
+                  cancelled,
+                  revenue: revenue || 0,
+                  upComming,
+                },
+              }
             : {}),
         },
       };

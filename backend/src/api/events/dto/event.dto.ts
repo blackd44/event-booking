@@ -39,4 +39,7 @@ export class FindEventsDto extends PartialType(PaginatorDto) {
 
   @ApiProperty({ required: false })
   max_date?: string;
+
+  @ApiProperty({ required: false })
+  q?: string;
 }

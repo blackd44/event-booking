@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,7 +14,6 @@ import {
   MapPin,
   User,
   Mail,
-  Download,
   Filter,
   Ticket,
 } from "lucide-react";
@@ -56,10 +54,10 @@ export default function AdminBookingsPage() {
             View and manage all event bookings
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 shadow-lg">
+        {/* <Button className="bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 shadow-lg">
           <Download className="h-4 w-4 mr-2" />
           Export Data
-        </Button>
+        </Button> */}
       </div>
 
       {/* Stats */}
@@ -77,7 +75,7 @@ export default function AdminBookingsPage() {
             <div className="text-2xl font-bold text-green-600">
               {data?.stats?.confirmed || 0}
             </div>
-            <p className="text-sm text-gray-600">Active Bookings</p>
+            <p className="text-sm text-gray-600">Comfirmed Bookings</p>
           </CardContent>
         </Card>
         <Card className="shadow-elegant border-0">

@@ -60,6 +60,7 @@ export function useBookings() {
 export type TBookingRes = TPaginateRes<IBooking> & {
   stats?: {
     confirmed: number;
+    upComming: number;
     cancelled: number;
     revenue: number;
   };
@@ -77,7 +78,7 @@ export function useBookingsAll({
   q?: string;
 } = {}) {
   return useQuery({
-    queryKey: ["bookings"],
+    queryKey: ["bookings", show_stats, status, user_id, q],
     queryFn: async () => {
       const response = await baseInstance.get<TBookingRes>("/bookings/all", {
         params: { show_stats, status, user_id, q },

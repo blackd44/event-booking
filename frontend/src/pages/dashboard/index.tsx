@@ -8,24 +8,22 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Ticket, Clock, TrendingUp } from "lucide-react";
-import { useBookings } from "@/services/booking";
+import { Calendar, Clock, Ticket, TrendingUp } from "lucide-react";
+import { useBookingsAll } from "@/services/booking";
 import { Link } from "react-router-dom";
 
 export default function CustomerDashboardPage() {
-  const { data: bookings = [], isLoading: loading, error } = useBookings();
+  const { data: bookings, isLoading: loading } = useBookingsAll({
+    show_stats: true,
+  });
 
   // Computed values using useMemo for performance optimization
-  const { activeBookings, upcomingEvents, totalSpent } = useMemo(() => {
-    const active = bookings.filter((b) => b.status === "active");
-    const upcoming = active.filter((b) => new Date(b.event.date) > new Date());
-    const spent = active.reduce((sum, b) => sum + b.event.price, 0);
+  const { activeBookings, upComming, totalSpent } = useMemo(() => {
+    const active = bookings?.stats?.confirmed || 0;
+    const spent = bookings?.stats?.revenue || 0;
+    const upComming = bookings?.stats?.upComming || 0;
 
-    return {
-      activeBookings: active,
-      upcomingEvents: upcoming,
-      totalSpent: spent,
-    };
+    return { activeBookings: active, totalSpent: spent, upComming };
   }, [bookings]);
 
   // Error handling
@@ -67,7 +65,7 @@ export default function CustomerDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {loading ? "..." : bookings.length}
+              {loading ? "..." : bookings?.total}
             </div>
             <p className="text-xs text-gray-500 mt-1">All time</p>
           </CardContent>
@@ -76,7 +74,7 @@ export default function CustomerDashboardPage() {
         <Card className="shadow-elegant border-0 hover:shadow-elegant-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Active Bookings
+              Comfirmed Bookings
             </CardTitle>
             <div className="p-2 bg-gradient-to-br from-green-400 to-green-600 rounded-lg">
               <Calendar className="h-4 w-4 text-white" />
@@ -84,7 +82,7 @@ export default function CustomerDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {loading ? "..." : activeBookings.length}
+              {loading ? "..." : activeBookings}
             </div>
             <p className="text-xs text-green-600 flex items-center mt-1">
               <TrendingUp className="h-3 w-3 mr-1" />
@@ -104,7 +102,7 @@ export default function CustomerDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {loading ? "..." : upcomingEvents.length}
+              {loading ? "..." : upComming}
             </div>
             <p className="text-xs text-blue-600 mt-1">Events to attend</p>
           </CardContent>
@@ -129,7 +127,7 @@ export default function CustomerDashboardPage() {
       </div>
 
       {/* Recent Bookings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         <Card className="shadow-elegant border-0">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -150,7 +148,7 @@ export default function CustomerDashboardPage() {
                   </div>
                 ))}
               </div>
-            ) : bookings.length === 0 ? (
+            ) : bookings?.total === 0 ? (
               <div className="text-center py-8">
                 <Ticket className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500 mb-4">No bookings yet</p>
@@ -160,7 +158,7 @@ export default function CustomerDashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {bookings.slice(0, 3).map((booking) => (
+                {bookings?.results?.slice(0, 3).map((booking) => (
                   <div
                     key={booking.id}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -193,7 +191,7 @@ export default function CustomerDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-elegant border-0">
+        {/* <Card className="shadow-elegant border-0">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Upcoming Events</span>
@@ -214,15 +212,7 @@ export default function CustomerDashboardPage() {
                   </div>
                 ))}
               </div>
-            ) : upcomingEvents.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">No upcoming events</p>
-                <Button asChild>
-                  <Link to="/events">Find Events</Link>
-                </Button>
-              </div>
-            ) : (
+            )  : (
               <div className="space-y-4">
                 {upcomingEvents.slice(0, 3).map((booking) => (
                   <div
@@ -254,7 +244,7 @@ export default function CustomerDashboardPage() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

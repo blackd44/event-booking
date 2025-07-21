@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Card,
@@ -28,36 +28,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useDeleteEvent, useEvents } from "@/services/events";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export default function AdminEventsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedQ = useDebouncedValue(searchTerm, 400);
   const { toast } = useToast();
 
-  const { data: events, isLoading, error } = useEvents();
+  const { data: events, isLoading, error } = useEvents({ q: debouncedQ });
   const deleteEventMutation = useDeleteEvent();
 
   // Handle API errors
-  if (error) {
-    toast({
-      title: "Error",
-      description: "Failed to fetch events",
-      variant: "destructive",
-    });
-  }
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch events",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   const deleteEvent = async (eventId: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) {
-      return;
-    }
+    if (!confirm("Are you sure you want to delete this event?")) return;
 
     deleteEventMutation.mutate(eventId);
   };
-
-  const filteredEvents = events?.results?.filter(
-    (event) =>
-      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="space-y-8">
@@ -100,7 +96,7 @@ export default function AdminEventsPage() {
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500"></div>
         </div>
-      ) : filteredEvents?.length === 0 ? (
+      ) : events?.total === 0 ? (
         <Card className="shadow-elegant border-0">
           <CardContent className="text-center py-12">
             <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -127,7 +123,7 @@ export default function AdminEventsPage() {
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents?.map((event) => (
+          {events?.results?.map((event) => (
             <Card
               key={event.id}
               className="shadow-elegant border-0 hover:shadow-elegant-lg transition-all duration-300"

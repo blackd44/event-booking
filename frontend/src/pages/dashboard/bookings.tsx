@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -26,49 +26,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useBookings, useCancelBooking } from "@/services/booking";
+import { useBookingsAll, useCancelBooking } from "@/services/booking";
 import { Link } from "react-router-dom";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { BookingStatus, type EBookingStatus } from "@/types/enums";
 
 export default function CustomerBookingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const debouncedQ = useDebouncedValue(searchTerm, 400);
+  const [statusFilter, setStatusFilter] = useState<EBookingStatus | "all">(
+    "all"
+  );
   const { toast } = useToast();
 
   // React Query hooks
-  const { data: bookings = [], isLoading: loading, error } = useBookings();
+  const {
+    data: bookings,
+    isLoading: loading,
+    error,
+  } = useBookingsAll({
+    show_stats: true,
+    q: debouncedQ,
+    status: statusFilter == "all" ? undefined : statusFilter,
+  });
   const cancelBookingMutation = useCancelBooking();
-
-  // Memoized computed values
-  const { filteredBookings, activeBookings, upcomingEvents, totalSpent } =
-    useMemo(() => {
-      const active = bookings.filter((b) => b.status === "active");
-      const upcoming = active.filter(
-        (b) => new Date(b.event.date) > new Date()
-      );
-      const spent = active.reduce((sum, b) => sum + b.event.price, 0);
-
-      const filtered = bookings.filter((booking) => {
-        const matchesSearch =
-          booking.event.title
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          booking.event.location
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase());
-
-        const matchesStatus =
-          statusFilter === "all" || booking.status === statusFilter;
-
-        return matchesSearch && matchesStatus;
-      });
-
-      return {
-        filteredBookings: filtered,
-        activeBookings: active,
-        upcomingEvents: upcoming,
-        totalSpent: spent,
-      };
-    }, [bookings, searchTerm, statusFilter]);
 
   const handleCancelBooking = async (bookingId: string) => {
     if (!confirm("Are you sure you want to cancel this booking?")) return;
@@ -132,7 +113,7 @@ export default function CustomerBookingsPage() {
         <Card className="shadow-elegant border-0">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-gray-900">
-              {loading ? "..." : bookings.length}
+              {loading ? "..." : bookings?.total}
             </div>
             <p className="text-sm text-gray-600">Total Bookings</p>
           </CardContent>
@@ -140,15 +121,15 @@ export default function CustomerBookingsPage() {
         <Card className="shadow-elegant border-0">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-green-600">
-              {loading ? "..." : activeBookings.length}
+              {loading ? "..." : bookings?.stats?.confirmed}
             </div>
-            <p className="text-sm text-gray-600">Active Bookings</p>
+            <p className="text-sm text-gray-600">Comfirmed Bookings</p>
           </CardContent>
         </Card>
         <Card className="shadow-elegant border-0">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-blue-600">
-              {loading ? "..." : upcomingEvents.length}
+              {loading ? "..." : bookings?.stats?.upComming}
             </div>
             <p className="text-sm text-gray-600">Upcoming Events</p>
           </CardContent>
@@ -156,7 +137,7 @@ export default function CustomerBookingsPage() {
         <Card className="shadow-elegant border-0">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-primary-600">
-              {loading ? "..." : `$${totalSpent}`}
+              {loading ? "..." : `$${bookings?.stats?.revenue}`}
             </div>
             <p className="text-sm text-gray-600">Total Spent</p>
           </CardContent>
@@ -179,7 +160,7 @@ export default function CustomerBookingsPage() {
             </div>
             <Select
               value={statusFilter}
-              onValueChange={setStatusFilter}
+              onValueChange={(v) => setStatusFilter(v as EBookingStatus)}
               disabled={loading}
             >
               <SelectTrigger className="w-full sm:w-48">
@@ -188,8 +169,9 @@ export default function CustomerBookingsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                {Object.values(BookingStatus).map((status) => (
+                  <SelectItem value={status}>{status}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -201,7 +183,7 @@ export default function CustomerBookingsPage() {
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500"></div>
         </div>
-      ) : filteredBookings.length === 0 ? (
+      ) : bookings?.total === 0 ? (
         <Card className="shadow-elegant border-0">
           <CardContent className="text-center py-12">
             <Ticket className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -225,7 +207,7 @@ export default function CustomerBookingsPage() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {filteredBookings.map((booking) => (
+          {bookings?.results?.map((booking) => (
             <Card
               key={booking.id}
               className="shadow-elegant border-0 hover:shadow-elegant-lg transition-all duration-300"
@@ -310,9 +292,7 @@ export default function CustomerBookingsPage() {
                   </div>
                   <div className="flex items-center justify-end">
                     <Button variant="outline" asChild>
-                      <Link to={`/events/${booking.event.id}`}>
-                        View Event
-                      </Link>
+                      <Link to={`/events/${booking.event.id}`}>View Event</Link>
                     </Button>
                   </div>
                 </div>
