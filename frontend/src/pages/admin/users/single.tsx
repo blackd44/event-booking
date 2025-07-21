@@ -163,17 +163,6 @@ export default function AdminUserProfilePage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600">Join Date</p>
-                <div className="flex items-center text-gray-900">
-                  <Calendar className="h-4 w-4 mr-2 text-primary-500" />
-                  {new Date(user.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </div>
-              </div>
               {/* <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-600">Last Login</p>
                 <div className="flex items-center text-gray-900">
