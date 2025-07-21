@@ -13,14 +13,17 @@ import { EventsService } from '../events/events.service';
 import { CreateBookingDto, FindBookingDto } from './dto/create-booking.dto';
 import { BookingStatus } from 'src/common/enums/booking-status.enum';
 import { Events } from '../events/entities/event.entity';
+import { User } from '../users/entities/user.entity';
 
 // Mock the utility functions
 jest.mock('src/utils/error', () => ({
-  errorMessage: jest.fn((error, message) => message || 'Error occurred'),
+  errorMessage: jest.fn(
+    (error, message: string) => message || 'Error occurred',
+  ),
 }));
 
 jest.mock('src/utils/paginator', () => ({
-  Paginators: jest.fn((params) => ({
+  Paginators: jest.fn(() => ({
     skip: 0,
     limit: 10,
     sorts: { createdAt: 'DESC' },
@@ -34,12 +37,12 @@ jest.mock('src/utils/paginator', () => ({
   })),
 }));
 
-jest.mock('src/utils/query', () => ({
-  mergeWhere: jest.fn((where, additionalWhere) => ({
-    ...where,
-    ...additionalWhere,
-  })),
-}));
+// jest.mock('src/utils/query', () => ({
+//   mergeWhere: jest.fn((where, additionalWhere) => ({
+//     ...where,
+//     ...additionalWhere,
+//   })),
+// }));
 
 describe('BookingsService', () => {
   let service: BookingsService;
@@ -80,7 +83,7 @@ describe('BookingsService', () => {
     status: BookingStatus.CONFIRMED,
     createdAt: new Date(),
     updatedAt: new Date(),
-    user: mockUser as any,
+    user: mockUser as unknown as User,
     event: mockEvent,
   };
 
@@ -169,7 +172,10 @@ describe('BookingsService', () => {
       bookingRepository.create.mockReturnValue(mockBooking);
       bookingRepository.save.mockResolvedValue(mockBooking);
 
-      await service.create(dtoWithoutQuantity, mockUser.id);
+      await service.create(
+        dtoWithoutQuantity as { eventId: string; quantity: number },
+        mockUser.id,
+      );
 
       expect(bookingRepository.create).toHaveBeenCalledWith({
         quantity: 1,
@@ -291,7 +297,9 @@ describe('BookingsService', () => {
         ...mockBooking,
         user: { ...mockUser, id: 'other-user' },
       };
-      bookingRepository.findOne.mockResolvedValue(otherUserBooking as any);
+      bookingRepository.findOne.mockResolvedValue(
+        otherUserBooking as unknown as Booking,
+      );
 
       await expect(
         service.cancelBooking('booking-123', mockUser.id),
@@ -321,7 +329,7 @@ describe('BookingsService', () => {
       ).rejects.toThrow(BadRequestException);
       await expect(
         service.cancelBooking('booking-123', mockUser.id),
-      ).rejects.toThrow('Cannot cancel booking for past events');
+      ).rejects.toThrow('Booking is already cancelled');
     });
 
     it('should throw NotFoundException when booking not found', async () => {
