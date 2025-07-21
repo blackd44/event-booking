@@ -11,3 +11,10 @@ export const Role = {
 } as const;
 
 export type ERole = (typeof Role)[keyof typeof Role];
+
+export const BookingStatus = {
+  confirmed: "confirmed",
+  cancelled: "cancelled",
+} as const;
+
+export type EBookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];

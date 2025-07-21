@@ -2,6 +2,10 @@ import { handleError } from "@/lib/error";
 import { baseInstance } from "../axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import type { EBookingStatus } from "@/types/enums";
+import type { IUser } from "../users";
+import type { IEvent } from "../events";
+import type { TPaginateRes } from "@/types/pagination";
 
 interface IBookingRequest {
   eventId: string;
@@ -35,14 +39,8 @@ export function useCreateBooking() {
 
 export interface IBooking {
   id: string;
-  event: {
-    id: string;
-    title: string;
-    description: string;
-    location: string;
-    date: string;
-    price: number;
-  };
+  event: IEvent;
+  user?: IUser;
   status: "active" | "cancelled";
   bookedAt: string;
 }
@@ -52,6 +50,38 @@ export function useBookings() {
     queryKey: ["bookings"],
     queryFn: async () => {
       const response = await baseInstance.get<IBooking[]>("/bookings");
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+}
+
+export type TBookingRes = TPaginateRes<IBooking> & {
+  stats?: {
+    confirmed: number;
+    cancelled: number;
+    revenue: number;
+  };
+};
+
+export function useBookingsAll({
+  show_stats,
+  status,
+  user_id,
+  q,
+}: {
+  show_stats?: boolean;
+  user_id?: string;
+  status?: EBookingStatus;
+  q?: string;
+} = {}) {
+  return useQuery({
+    queryKey: ["bookings"],
+    queryFn: async () => {
+      const response = await baseInstance.get<TBookingRes>("/bookings/all", {
+        params: { show_stats, status, user_id, q },
+      });
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

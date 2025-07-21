@@ -17,7 +17,6 @@ import { Booking } from './entities/booking.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { PaginatorResponseDto } from 'src/utils/paginator';
 
@@ -51,20 +50,24 @@ export class BookingsController {
     description: 'Get user bookings',
     type: [Booking],
   })
-  async findUserBookings(@Req() req: Request): Promise<Booking[]> {
+  async findUserBookings(@Req() req: Request) {
     return this.bookingsService.findUserBookings(req?.user?.id || '');
   }
 
   @Get('all')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
   @ApiResponse({
     status: 200,
     description: 'Get all bookings (admin only)',
     type: PaginatorResponseDto<Booking>,
   })
-  async findAll(@Query() query: FindBookingDto) {
-    const { data, error } = await this.bookingsService.findAll(query);
+  async findAll(@Query() query: FindBookingDto, @Req() req: Request) {
+    const isAdmin = req?.user?.role === Role.ADMIN;
+
+    const { data, error } = await this.bookingsService.findAll({
+      ...query,
+      user_id: isAdmin ? query?.user_id : req?.user?.id,
+    });
     if (error) throw new BadRequestException(error);
     return data;
   }

@@ -7,11 +7,12 @@ import {
 import { CreateBookingDto, FindBookingDto } from './dto/create-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Booking } from './entities/booking.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { EventsService } from '../events/events.service';
 import { BookingStatus } from 'src/common/enums/booking-status.enum';
 import { PaginatorResponse, Paginators } from 'src/utils/paginator';
 import { errorMessage } from 'src/utils/error';
+import { mergeWhere } from 'src/utils/query';
 
 @Injectable()
 export class BookingsService {
@@ -54,7 +55,7 @@ export class BookingsService {
     return this.bookingRepository.save(booking);
   }
 
-  async findUserBookings(userId: string): Promise<Booking[]> {
+  async findUserBookings(userId: string) {
     return this.bookingRepository.find({
       where: { user: { id: userId } },
       relations: ['event'],
@@ -94,18 +95,58 @@ export class BookingsService {
 
   async findAll(params: FindBookingDto) {
     try {
-      const { user_id } = params;
+      const { user_id, show_stats, status, q } = params;
       const { skip, limit, sorts } = Paginators(params);
 
+      const baseWhere: FindOptionsWhere<Booking> = {
+        ...(user_id ? { user: { id: user_id } } : {}),
+        ...(status ? { status } : {}),
+      };
+      const searchWhere: FindOptionsWhere<Booking>[] = q
+        ? [
+            { user: { email: ILike(`%${q}%`) } },
+            { user: { firstName: ILike(`%${q}%`) } },
+            { user: { lastName: ILike(`%${q}%`) } },
+            { event: { title: ILike(`%${q}%`) } },
+            { event: { description: ILike(`%${q}%`) } },
+          ]
+        : [];
+      const where: FindOptionsWhere<Booking> | FindOptionsWhere<Booking>[] =
+        searchWhere.length > 0
+          ? searchWhere.map((search) => ({ ...baseWhere, ...search }))
+          : baseWhere;
+
       const [data, count] = await this.bookingRepository.findAndCount({
-        where: { ...(user_id ? { user: { id: user_id } } : {}) },
+        where,
         relations: ['user', 'event'],
         order: sorts,
         skip: skip,
         take: limit,
       });
 
-      return { data: PaginatorResponse(data, count, limit, skip) };
+      let confirmed = 0;
+      let cancelled = 0;
+      let revenue = null;
+
+      if (show_stats)
+        [confirmed, cancelled, revenue] = await Promise.all([
+          this.bookingRepository.count({
+            where: mergeWhere(where, { status: BookingStatus.CONFIRMED }),
+          }),
+          this.bookingRepository.count({
+            where: mergeWhere(where, { status: BookingStatus.CANCELLED }),
+          }),
+          this.bookingRepository.sum('totalAmount', mergeWhere(where, {})),
+        ]);
+
+      return {
+        data: {
+          ...PaginatorResponse(data, count, limit, skip),
+          ...(show_stats
+            ? { stats: { confirmed, cancelled, revenue: revenue || 0 } }
+            : {}),
+        },
+      };
     } catch (error) {
       return { error: errorMessage(error) };
     }

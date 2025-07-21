@@ -17,6 +17,7 @@ import {
   Mail,
   Download,
   Filter,
+  Ticket,
 } from "lucide-react";
 import {
   Select,
@@ -25,80 +26,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface Booking {
-  id: string;
-  user: {
-    name: string;
-    email: string;
-  };
-  event: {
-    title: string;
-    date: string;
-    location: string;
-    price: number;
-  };
-  status: "active" | "cancelled";
-  bookedAt: string;
-}
+import { useBookingsAll } from "@/services/booking";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { BookingStatus, type EBookingStatus } from "@/types/enums";
 
 export default function AdminBookingsPage() {
-  const [bookings] = useState<Booking[]>([
-    {
-      id: "1",
-      user: { name: "John Doe", email: "john@example.com" },
-      event: {
-        title: "Tech Conference 2024",
-        date: "2024-06-15T09:00:00Z",
-        location: "San Francisco Convention Center",
-        price: 299,
-      },
-      status: "active",
-      bookedAt: "2024-05-01T10:30:00Z",
-    },
-    {
-      id: "2",
-      user: { name: "Jane Smith", email: "jane@example.com" },
-      event: {
-        title: "Music Festival Summer 2024",
-        date: "2024-07-20T18:00:00Z",
-        location: "Central Park, New York",
-        price: 89,
-      },
-      status: "active",
-      bookedAt: "2024-05-02T14:15:00Z",
-    },
-    {
-      id: "3",
-      user: { name: "Mike Johnson", email: "mike@example.com" },
-      event: {
-        title: "Startup Pitch Competition",
-        date: "2024-05-30T14:00:00Z",
-        location: "Silicon Valley Innovation Hub",
-        price: 50,
-      },
-      status: "cancelled",
-      bookedAt: "2024-04-28T16:45:00Z",
-    },
-  ]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<EBookingStatus | "all">(
+    "all"
+  );
 
-  const filteredBookings = bookings.filter((booking) => {
-    const matchesSearch =
-      booking.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.event.title.toLowerCase().includes(searchTerm.toLowerCase());
+  const debuncedQ = useDebouncedValue(searchTerm, 400);
 
-    const matchesStatus =
-      statusFilter === "all" || booking.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+  const { data } = useBookingsAll({
+    q: debuncedQ,
+    show_stats: true,
+    status: statusFilter == "all" ? undefined : statusFilter,
   });
-
-  const totalRevenue = bookings
-    .filter((b) => b.status === "active")
-    .reduce((sum, b) => sum + b.event.price, 0);
 
   return (
     <div className="space-y-8">
@@ -123,7 +67,7 @@ export default function AdminBookingsPage() {
         <Card className="shadow-elegant border-0">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-gray-900">
-              {bookings.length}
+              {data?.total || 0}
             </div>
             <p className="text-sm text-gray-600">Total Bookings</p>
           </CardContent>
@@ -131,7 +75,7 @@ export default function AdminBookingsPage() {
         <Card className="shadow-elegant border-0">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-green-600">
-              {bookings.filter((b) => b.status === "active").length}
+              {data?.stats?.confirmed || 0}
             </div>
             <p className="text-sm text-gray-600">Active Bookings</p>
           </CardContent>
@@ -139,7 +83,7 @@ export default function AdminBookingsPage() {
         <Card className="shadow-elegant border-0">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-red-600">
-              {bookings.filter((b) => b.status === "cancelled").length}
+              {data?.stats?.cancelled || 0}
             </div>
             <p className="text-sm text-gray-600">Cancelled</p>
           </CardContent>
@@ -147,7 +91,7 @@ export default function AdminBookingsPage() {
         <Card className="shadow-elegant border-0">
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-primary-600">
-              ${totalRevenue.toLocaleString()}
+              ${(data?.stats?.revenue || 0).toLocaleString()}
             </div>
             <p className="text-sm text-gray-600">Total Revenue</p>
           </CardContent>
@@ -167,15 +111,19 @@ export default function AdminBookingsPage() {
                 className="pl-10"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as EBookingStatus)}
+            >
               <SelectTrigger className="w-full sm:w-48">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value={"all"}>All Status</SelectItem>
+                {Object.values(BookingStatus).map((status) => (
+                  <SelectItem value={status}>{status}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -186,96 +134,119 @@ export default function AdminBookingsPage() {
       <Card className="shadow-elegant border-0">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>All Bookings ({filteredBookings.length})</span>
+            <span>All Bookings ({data?.total})</span>
           </CardTitle>
           <CardDescription>Complete list of all event bookings</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">
-                    Customer
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">
-                    Event
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">
-                    Booking Date
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">
-                    Amount
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr
-                    key={booking.id}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="py-4 px-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-white" />
+          {data?.total === 0 ? (
+            <Card className="shadow-elegant border-0">
+              <CardContent className="text-center py-12">
+                <Ticket className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                  {searchTerm || statusFilter !== "all"
+                    ? "No bookings found"
+                    : "No bookings yet"}
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  {searchTerm || statusFilter !== "all"
+                    ? "Try adjusting your search or filters"
+                    : "Start managing bookings and events as an administrator!"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">
+                      Customer
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">
+                      Event
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">
+                      Booking Date
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">
+                      Amount
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data?.results?.map((booking) => (
+                    <tr
+                      key={booking.id}
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-4 px-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {booking?.user?.firstName}{" "}
+                              {booking?.user?.lastName}
+                            </p>
+                            <p className="text-sm text-gray-500 flex items-center">
+                              <Mail className="h-3 w-3 mr-1" />
+                              {booking?.user?.email}
+                            </p>
+                          </div>
                         </div>
+                      </td>
+                      <td className="py-4 px-4">
                         <div>
                           <p className="font-medium text-gray-900">
-                            {booking.user.name}
+                            {booking.event.title}
                           </p>
-                          <p className="text-sm text-gray-500 flex items-center">
-                            <Mail className="h-3 w-3 mr-1" />
-                            {booking.user.email}
-                          </p>
+                          <div className="text-sm text-gray-500 space-y-1">
+                            <p className="flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {new Date(
+                                booking.event.date
+                              ).toLocaleDateString()}
+                            </p>
+                            <p className="flex items-center">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              {booking.event.location}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {booking.event.title}
-                        </p>
-                        <div className="text-sm text-gray-500 space-y-1">
-                          <p className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {new Date(booking.event.date).toLocaleDateString()}
-                          </p>
-                          <p className="flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {booking.event.location}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-gray-600">
-                        {new Date(booking.bookedAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="font-medium text-gray-900">
-                        ${booking.event.price}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Badge
-                        variant={
-                          booking.status === "active" ? "default" : "secondary"
-                        }
-                        className="capitalize"
-                      >
-                        {booking.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="text-gray-600">
+                          {new Date(booking.bookedAt).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="font-medium text-gray-900">
+                          ${booking.event.price}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <Badge
+                          variant={
+                            booking.status === "active"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className="capitalize"
+                        >
+                          {booking.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

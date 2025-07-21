@@ -1,6 +1,7 @@
 import { IsUUID, IsNumber, IsPositive } from 'class-validator';
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { PaginatorDto } from 'src/utils/paginator';
+import { BookingStatus } from 'src/common/enums/booking-status.enum';
 
 export class CreateBookingDto {
   @ApiProperty({ description: 'Event ID' })
@@ -16,6 +17,17 @@ export class CreateBookingDto {
 export class UpdateBookingDto extends PartialType(CreateBookingDto) {}
 
 export class FindBookingDto extends PartialType(PaginatorDto) {
-  @ApiProperty({ description: 'User ID' })
+  @ApiPropertyOptional({ description: 'User ID' })
   user_id?: string;
+
+  @ApiPropertyOptional({ description: 'get active, cancelled and revenue' })
+  show_stats?: boolean;
+
+  @ApiPropertyOptional({
+    description: `status: ${Object.values(BookingStatus).join(', ')}`,
+  })
+  status?: BookingStatus;
+
+  @ApiPropertyOptional({ description: 'search' })
+  q?: string;
 }
