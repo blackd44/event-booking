@@ -5,14 +5,13 @@ import { handleError } from "@/lib/error";
 import type { ERole, EUserStatus } from "@/types/enums";
 
 // types
-export interface IUser {
+export interface IMe {
   id: string;
   email: string;
   lastName: string;
   firstName: string;
   role: ERole;
   status: EUserStatus;
-  createdAt: Date;
 }
 
 export interface ILoginRequest {
@@ -30,7 +29,7 @@ export interface IRegisterRequest {
 
 export interface IAuthResponse {
   access_token: string;
-  user: IUser;
+  user: IMe;
 }
 
 // Get current user
@@ -41,7 +40,7 @@ export function useMe() {
     queryKey: ["auth", "me"],
     queryFn: () =>
       baseInstance
-        .get<{ user: IUser }>("/auth/me")
+        .get<{ user: IMe }>("/auth/me")
         .then((res) => res?.data?.user),
     enabled: !!token,
     retry: false,
@@ -73,7 +72,7 @@ export function useLogin() {
       //       email: user?.[1].email,
       //       name: "Demo User",
       //       role: user?.[0],
-      //     } as IUser,
+      //     } as IMe,
       //   };
       // }
 

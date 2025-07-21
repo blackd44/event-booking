@@ -4,17 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateBookingDto } from './dto/create-booking.dto';
+import { CreateBookingDto, FindBookingDto } from './dto/create-booking.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Booking } from './entities/booking.entity';
 import { Repository } from 'typeorm';
 import { EventsService } from '../events/events.service';
 import { BookingStatus } from 'src/common/enums/booking-status.enum';
-import {
-  PaginatorDto,
-  PaginatorResponse,
-  Paginators,
-} from 'src/utils/paginator';
+import { PaginatorResponse, Paginators } from 'src/utils/paginator';
 import { errorMessage } from 'src/utils/error';
 
 @Injectable()
@@ -96,11 +92,13 @@ export class BookingsService {
     return this.bookingRepository.save(booking);
   }
 
-  async findAll(params: PaginatorDto) {
+  async findAll(params: FindBookingDto) {
     try {
+      const { user_id } = params;
       const { skip, limit, sorts } = Paginators(params);
 
       const [data, count] = await this.bookingRepository.findAndCount({
+        where: { ...(user_id ? { user: { id: user_id } } : {}) },
         relations: ['user', 'event'],
         order: sorts,
         skip: skip,

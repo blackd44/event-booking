@@ -8,11 +8,12 @@ import {
 import { UsersService } from './users.service';
 import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
-import { PaginatorDto, PaginatorResponseDto } from 'src/utils/paginator';
+import { PaginatorResponseDto } from 'src/utils/paginator';
 import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { FindUserDto } from './dto/user.dto';
 
 @Controller()
 export class UsersController {
@@ -27,7 +28,7 @@ export class UsersController {
     description: 'Get all users',
     type: PaginatorResponseDto<User>,
   })
-  async findAll(@Query() query: PaginatorDto) {
+  async findAll(@Query() query: FindUserDto) {
     const { data, error } = await this.usersService.findAll(query);
     if (error) throw new BadGatewayException(error);
     return data;

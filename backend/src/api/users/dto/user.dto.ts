@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import { PaginatorDto } from 'src/utils/paginator';
 
 export class CreateUserDto {
   @ApiProperty({ description: 'User email' })
@@ -18,4 +19,12 @@ export class CreateUserDto {
   @IsString()
   @MinLength(6)
   password!: string;
+}
+
+export class FindUserDto extends PartialType(PaginatorDto) {
+  @ApiProperty({ description: 'Search', required: false })
+  q?: string;
+
+  @ApiProperty({ description: 'can show user bookings', required: false })
+  show_bookings?: boolean;
 }

@@ -5,8 +5,8 @@ import {
   useRegister,
   type IAuthResponse,
   type ILoginRequest,
+  type IMe,
   type IRegisterRequest,
-  type IUser,
 } from "@/services/users/me";
 import type { ERole } from "@/types/enums";
 import type { UseMutationResult } from "@tanstack/react-query";
@@ -14,7 +14,7 @@ import type React from "react";
 import { createContext } from "react";
 
 interface AuthContextType {
-  user: IUser | null;
+  user: IMe | null;
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
@@ -87,4 +87,4 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export { AuthContext, AuthProvider };
-export type { IUser };
+export type { IMe };

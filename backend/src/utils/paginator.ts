@@ -19,8 +19,10 @@ export function Paginators(params: Partial<PaginatorDto>) {
   const { start, size, sort_by } = params;
 
   const skip = Number(start) || 0;
-  const limit = Number(size) < 0 ? 0 : Number(size) || 10;
   const sorts = sortFields(`${sort_by || ''}`);
+
+  let limit = (Number(size) < 0 ? 0 : Number(size)) ?? 10;
+  limit = isNaN(limit) ? 10 : limit;
 
   return { start, size, skip, limit, sorts, sort_by };
 }

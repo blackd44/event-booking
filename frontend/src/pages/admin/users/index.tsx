@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, UserPlus, Mail, Calendar, MoreHorizontal } from "lucide-react";
+import { Search, Mail, Calendar, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,64 +17,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
-import type { ERole } from "@/types/enums";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: ERole;
-  joinDate: string;
-  totalBookings: number;
-  status: "active" | "inactive";
-}
+import { useUsers } from "@/services/users";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export default function AdminUsersPage() {
-  const [users] = useState<User[]>([
-    {
-      id: "1",
-      name: "Admin User",
-      email: "admin@example.com",
-      role: "admin",
-      joinDate: "2024-01-15",
-      totalBookings: 0,
-      status: "active",
-    },
-    {
-      id: "2",
-      name: "Customer User",
-      email: "customer@example.com",
-      role: "customer",
-      joinDate: "2024-02-20",
-      totalBookings: 5,
-      status: "active",
-    },
-    {
-      id: "3",
-      name: "John Doe",
-      email: "john@example.com",
-      role: "customer",
-      joinDate: "2024-03-10",
-      totalBookings: 12,
-      status: "active",
-    },
-    {
-      id: "4",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "customer",
-      joinDate: "2024-03-15",
-      totalBookings: 8,
-      status: "inactive",
-    },
-  ]);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedQ = useDebouncedValue(searchTerm, 400);
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const { data } = useUsers({ q: debouncedQ });
 
   return (
     <div className="space-y-8">
@@ -88,10 +38,10 @@ export default function AdminUsersPage() {
             Manage all users and their permissions
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 shadow-lg">
+        {/* <Button className="bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 shadow-lg">
           <UserPlus className="h-4 w-4 mr-2" />
           Add User
-        </Button>
+        </Button> */}
       </div>
 
       {/* Search and Filters */}
@@ -115,7 +65,7 @@ export default function AdminUsersPage() {
       <Card className="shadow-elegant border-0">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>All Users ({filteredUsers.length})</span>
+            <span>All Users ({data?.total})</span>
           </CardTitle>
           <CardDescription>
             Complete list of all registered users
@@ -147,7 +97,7 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {data?.results?.map((user) => (
                   <tr
                     key={user.id}
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
@@ -156,7 +106,7 @@ export default function AdminUsersPage() {
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
                           <span className="text-white font-medium text-sm">
-                            {user.name
+                            {user.firstName
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
@@ -164,7 +114,7 @@ export default function AdminUsersPage() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {user.name}
+                            {user.firstName} {user.lastName}
                           </p>
                           <Link
                             to={`/admin/users/${user.id}`}
@@ -189,12 +139,12 @@ export default function AdminUsersPage() {
                     <td className="py-4 px-4">
                       <div className="flex items-center text-gray-600">
                         <Calendar className="h-4 w-4 mr-2" />
-                        {new Date(user.joinDate).toLocaleDateString()}
+                        {new Date(user.createdAt).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <span className="font-medium text-gray-900">
-                        {user.totalBookings}
+                        {user.bookingsCount}
                       </span>
                     </td>
                     <td className="py-4 px-4">
