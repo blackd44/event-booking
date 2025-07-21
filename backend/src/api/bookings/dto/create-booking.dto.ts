@@ -11,7 +11,7 @@ export class CreateBookingDto {
   @ApiProperty({ description: 'Number of tickets', default: 1 })
   @IsNumber()
   @IsPositive()
-  quantity!: number;
+  quantity: number = 1;
 }
 
 export class UpdateBookingDto extends PartialType(CreateBookingDto) {}
