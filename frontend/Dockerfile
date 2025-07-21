@@ -1,8 +1,9 @@
+
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 COPY . .
-RUN npm install -g pnpm && pnpm install && pnpm run build
+RUN npm install -g pnpm && pnpm install --frozen-lockfile && pnpm run build
 
 FROM alpine:latest AS runner
 RUN mkdir -p /usr/share/nginx/html
