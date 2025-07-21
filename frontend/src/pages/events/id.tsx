@@ -13,7 +13,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useEvent } from "@/services/events";
 import { useCreateBooking } from "@/services/booking";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -50,6 +50,11 @@ export default function EventDetailsPage() {
     createBookingMutation.mutate({ eventId: event.id });
   };
 
+  const bookedCount = useMemo(
+    () => (Number(event?.capacity) || 0) - (Number(event?.availableSpots) || 0),
+    [event?.availableSpots, event?.capacity]
+  );
+
   // Loading state
   if (isLoading) {
     return (
@@ -63,7 +68,7 @@ export default function EventDetailsPage() {
 
   if (!event) return null;
 
-  const isEventFull = event.bookedCount >= event.capacity;
+  const isEventFull = bookedCount >= event.capacity;
   const isEventPast = new Date(event.date) < new Date();
   const isBookingDisabled =
     createBookingMutation.isPending ||
@@ -151,7 +156,7 @@ export default function EventDetailsPage() {
               <div className="flex items-center text-gray-600">
                 <Users className="h-4 w-4 mr-2" />
                 <span>
-                  {event.bookedCount} / {event.capacity} tickets booked
+                  {bookedCount} / {event.capacity} tickets booked
                 </span>
               </div>
 
@@ -159,7 +164,7 @@ export default function EventDetailsPage() {
                 <div
                   className="bg-primary h-2 rounded-full"
                   style={{
-                    width: `${(event.bookedCount / event.capacity) * 100}%`,
+                    width: `${(bookedCount / event.capacity) * 100}%`,
                   }}
                 ></div>
               </div>

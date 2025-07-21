@@ -15,7 +15,9 @@ export interface IEvent {
   date: string;
   capacity: number;
   price: number;
-  bookedCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  availableSpots: number;
 }
 
 export function useEvents({ q }: { q?: string } = {}) {

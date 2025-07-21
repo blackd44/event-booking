@@ -54,7 +54,7 @@ export default function EventsPage() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-xl">{event.title}</CardTitle>
-                  {event.bookedCount >= event.capacity && (
+                  {event.availableSpots <= 0 && (
                     <Badge variant="destructive">Sold Out</Badge>
                   )}
                 </div>
@@ -80,7 +80,9 @@ export default function EventsPage() {
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <Users className="h-4 w-4 mr-2" />
-                  {event.bookedCount} / {event.capacity} booked
+                  {(Number(event?.capacity) || 0) -
+                    (Number(event?.availableSpots) || 0)}{" "}
+                  / {event.capacity} booked
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <DollarSign className="h-4 w-4 mr-2" />${event.price}

@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,13 +66,18 @@ export default function EditEventPage() {
     },
   });
 
+  const bookedCount = useMemo(
+    () => (Number(event?.capacity) || 0) - (Number(event?.availableSpots) || 0),
+    [event?.availableSpots, event?.capacity]
+  );
+
   // Populate form when event data loads
   useEffect(() => {
     if (event) {
       setValue("title", event.title);
       setValue("description", event.description);
       setValue("location", event.location);
-      setValue("date", formatDateTimeForInput(event.date));
+      setValue("date", formatDateTimeForInput(event?.date));
       setValue("capacity", event.capacity);
       setValue("price", event.price);
     }
@@ -92,10 +97,12 @@ export default function EditEventPage() {
 
   const onSubmit = (data: EditEventFormData) => {
     // Check if capacity is being reduced below current bookings
-    if (event && data.capacity < event.bookedCount) {
+    if (event && event?.availableSpots >= 0) {
       toast({
         title: "Invalid Capacity",
-        description: `Capacity cannot be less than current bookings (${event.bookedCount})`,
+        description: `Capacity cannot be less than current bookings (${
+          (Number(event?.capacity) || 0) - (Number(event?.availableSpots) || 0)
+        })`,
         variant: "destructive",
       });
       return;
@@ -153,7 +160,7 @@ export default function EditEventPage() {
             Update the event details below
             {event && (
               <span className="block text-sm text-gray-500 mt-1">
-                Current bookings: {event.bookedCount} / {event.capacity}
+                Current bookings: {bookedCount} / {event.capacity}
               </span>
             )}
           </CardDescription>
@@ -230,7 +237,7 @@ export default function EditEventPage() {
                 <Input
                   id="capacity"
                   type="number"
-                  min={event?.bookedCount || 1}
+                  min={bookedCount || 1}
                   {...register("capacity")}
                   className={
                     errors.capacity ? "border-red-500 focus:border-red-500" : ""
@@ -241,9 +248,9 @@ export default function EditEventPage() {
                     {errors.capacity.message}
                   </p>
                 )}
-                {event && event.bookedCount > 0 && (
+                {event && bookedCount > 0 && (
                   <p className="text-xs text-gray-500">
-                    Minimum capacity: {event.bookedCount} (current bookings)
+                    Minimum capacity: {bookedCount} (current bookings)
                   </p>
                 )}
               </div>

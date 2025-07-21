@@ -123,100 +123,104 @@ export default function AdminEventsPage() {
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events?.results?.map((event) => (
-            <Card
-              key={event.id}
-              className="shadow-elegant border-0 hover:shadow-elegant-lg transition-all duration-300"
-            >
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg line-clamp-2">
-                    {event.title}
-                  </CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link to={`/admin/events/${event.id}/edit`}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to={`/admin/events/${event.id}/bookings`}>
-                          <Users className="h-4 w-4 mr-2" />
-                          View Bookings
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => deleteEvent(event.id)}
-                        className="text-red-600 focus:text-red-600"
-                        disabled={deleteEventMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {deleteEventMutation.isPending
-                          ? "Deleting..."
-                          : "Delete"}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <CardDescription className="line-clamp-2">
-                  {event.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center text-sm text-gray-600">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {new Date(event.date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {event.location}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Users className="h-4 w-4 mr-2" />
-                  {event.bookedCount} / {event.capacity} booked
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-lg font-semibold text-primary-600">
-                    ${event.price}
+          {events?.results?.map((event) => {
+            const bookedCount =
+              (Number(event?.capacity) || 0) -
+              (Number(event?.availableSpots) || 0);
+
+            return (
+              <Card
+                key={event.id}
+                className="shadow-elegant border-0 hover:shadow-elegant-lg transition-all duration-300"
+              >
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg line-clamp-2">
+                      {event.title}
+                    </CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link to={`/admin/events/${event.id}/edit`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to={`/admin/events/${event.id}/bookings`}>
+                            <Users className="h-4 w-4 mr-2" />
+                            View Bookings
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => deleteEvent(event.id)}
+                          className="text-red-600 focus:text-red-600"
+                          disabled={deleteEventMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {deleteEventMutation.isPending
+                            ? "Deleting..."
+                            : "Delete"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <Badge
-                    variant={
-                      event.bookedCount >= event.capacity
-                        ? "destructive"
-                        : "default"
-                    }
-                  >
-                    {event.bookedCount >= event.capacity
-                      ? "Sold Out"
-                      : "Available"}
-                  </Badge>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${Math.min(
-                        (event.bookedCount / event.capacity) * 100,
-                        100
-                      )}%`,
-                    }}
-                  ></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <CardDescription className="line-clamp-2">
+                    {event.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {new Date(event.date).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    {event.location}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Users className="h-4 w-4 mr-2" />
+                    {bookedCount} / {event.capacity} booked
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-lg font-semibold text-primary-600">
+                      ${event.price}
+                    </div>
+                    <Badge
+                      variant={
+                        bookedCount >= event.capacity
+                          ? "destructive"
+                          : "default"
+                      }
+                    >
+                      {bookedCount >= event.capacity ? "Sold Out" : "Available"}
+                    </Badge>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${Math.min(
+                          (bookedCount / event.capacity) * 100,
+                          100
+                        )}%`,
+                      }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
