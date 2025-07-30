@@ -37,13 +37,12 @@ export class BookingsService {
       throw new BadRequestException('Cannot book tickets for past events');
 
     // Check available capacity
-    const availableSpots = await this.eventsService.getAvailableSpots(
-      createBookingDto.eventId,
-    );
-    if (availableSpots < quantity)
-      throw new BadRequestException(`Only ${availableSpots} spots available`);
+    if (Number(event?.availableSpots ?? 0) < quantity)
+      throw new BadRequestException(
+        `Only ${event?.availableSpots} spots available`,
+      );
 
-    const totalAmount = event.price * quantity;
+    const totalAmount = event?.price * quantity;
 
     const booking = this.bookingRepository.create({
       quantity,

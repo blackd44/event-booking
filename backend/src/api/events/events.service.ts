@@ -21,6 +21,10 @@ export class EventsService {
 
   async create(createEventDto: CreateEventDto) {
     try {
+      const date = moment(createEventDto?.date).utc();
+      if (moment().utc().isAfter(date))
+        throw new Error('Cannot create events in the Past');
+
       const event = this.eventRepository.create(createEventDto);
       const data = await this.eventRepository.save(event);
       return { data };

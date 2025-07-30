@@ -41,8 +41,11 @@ export interface IBooking {
   id: string;
   event: IEvent;
   user?: IUser;
-  status: "active" | "cancelled";
-  bookedAt: string;
+  status: EBookingStatus;
+  quantity: number;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function useBookings() {

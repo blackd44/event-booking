@@ -220,7 +220,7 @@ export default function CustomerBookingsPage() {
                     </CardTitle>
                     <CardDescription className="mt-1">
                       Booked on{" "}
-                      {new Date(booking.bookedAt).toLocaleDateString("en-US", {
+                      {new Date(booking.createdAt).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -230,13 +230,15 @@ export default function CustomerBookingsPage() {
                   <div className="flex items-center space-x-2">
                     <Badge
                       variant={
-                        booking.status === "active" ? "default" : "secondary"
+                        booking.status === BookingStatus.confirmed
+                          ? "default"
+                          : "secondary"
                       }
                       className="capitalize"
                     >
                       {booking.status}
                     </Badge>
-                    {booking.status === "active" &&
+                    {booking.status === BookingStatus.confirmed &&
                       new Date(booking.event.date) > new Date() && (
                         <Button
                           variant="outline"

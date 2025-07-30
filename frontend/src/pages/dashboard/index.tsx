@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Ticket, TrendingUp } from "lucide-react";
 import { useBookingsAll } from "@/services/booking";
 import { Link } from "react-router-dom";
+import { BookingStatus } from "@/types/enums";
 
 export default function CustomerDashboardPage() {
   const { data: bookings, isLoading: loading } = useBookingsAll({
@@ -175,7 +176,9 @@ export default function CustomerDashboardPage() {
                     <div className="text-right">
                       <Badge
                         variant={
-                          booking.status === "active" ? "default" : "secondary"
+                          booking.status === BookingStatus.confirmed
+                            ? "default"
+                            : "secondary"
                         }
                       >
                         {booking.status}

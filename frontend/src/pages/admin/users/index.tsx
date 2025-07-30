@@ -16,7 +16,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "react-router-dom";
 import { useUsers } from "@/services/users";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
@@ -116,13 +115,10 @@ export default function AdminUsersPage() {
                           <p className="font-medium text-gray-900">
                             {user.firstName} {user.lastName}
                           </p>
-                          <Link
-                            to={`/admin/users/${user.id}`}
-                            className="text-sm text-primary-600 hover:text-primary-700 hover:underline flex items-center transition-colors"
-                          >
+                          <span className="text-sm flex items-center transition-colors">
                             <Mail className="h-3 w-3 mr-1" />
                             {user.email}
-                          </Link>
+                          </span>
                         </div>
                       </div>
                     </td>

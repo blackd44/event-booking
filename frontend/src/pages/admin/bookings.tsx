@@ -168,6 +168,9 @@ export default function AdminBookingsPage() {
                       Booking Date
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">
+                      Tickets
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">
                       Amount
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">
@@ -207,7 +210,7 @@ export default function AdminBookingsPage() {
                             <p className="flex items-center">
                               <Calendar className="h-3 w-3 mr-1" />
                               {new Date(
-                                booking.event.date
+                                booking?.event?.date
                               ).toLocaleDateString()}
                             </p>
                             <p className="flex items-center">
@@ -219,18 +222,19 @@ export default function AdminBookingsPage() {
                       </td>
                       <td className="py-4 px-4">
                         <span className="text-gray-600">
-                          {new Date(booking.bookedAt).toLocaleDateString()}
+                          {new Date(booking.createdAt).toLocaleDateString()}
                         </span>
                       </td>
+                      <td className="py-4 px-4">{booking?.quantity}</td>
                       <td className="py-4 px-4">
                         <span className="font-medium text-gray-900">
-                          ${booking.event.price}
+                          ${booking?.totalAmount}
                         </span>
                       </td>
                       <td className="py-4 px-4">
                         <Badge
                           variant={
-                            booking.status === "active"
+                            booking.status === BookingStatus.confirmed
                               ? "default"
                               : "secondary"
                           }

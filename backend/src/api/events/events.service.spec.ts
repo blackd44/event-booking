@@ -11,11 +11,11 @@ import { BookingStatus } from 'src/common/enums/booking-status.enum';
 import { User } from '../users/entities/user.entity';
 
 // Mock the utility functions
-jest.mock('src/utils/error', () => ({
-  errorMessage: jest.fn(
-    (error, message?: string) => message || 'Error occurred',
-  ),
-}));
+// jest.mock('src/utils/error', () => ({
+//   errorMessage: jest.fn(
+//     (error, message?: string) => message ?? 'Error occurred',
+//   ),
+// }));
 
 // jest.mock('src/utils/paginator', () => ({
 //   Paginators: jest.fn(() => ({
@@ -113,11 +113,13 @@ describe('EventsService', () => {
 
   describe('create', () => {
     it('should successfully create an event', async () => {
+      const date = new Date();
+      date.setMonth(date.getMonth() + 1);
       const createEventDto: CreateEventDto = {
         title: 'New Event',
         description: 'New Description',
         location: 'New Location',
-        date: new Date('2024-12-30'),
+        date,
         capacity: 50,
         price: 25.0,
       };
@@ -132,12 +134,34 @@ describe('EventsService', () => {
       expect(result).toEqual({ data: mockEvent });
     });
 
-    it('should handle creation errors', async () => {
+    it('should not create an event', async () => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - 1);
       const createEventDto: CreateEventDto = {
         title: 'New Event',
         description: 'New Description',
         location: 'New Location',
-        date: new Date('2024-12-30'),
+        date,
+        capacity: 50,
+        price: 25.0,
+      };
+
+      eventRepository.create.mockReturnValue(mockEvent);
+      eventRepository.save.mockResolvedValue(mockEvent);
+
+      const result = await service.create(createEventDto);
+
+      expect(result).toEqual({ error: 'Cannot create events in the Past' });
+    });
+
+    it('should handle creation errors', async () => {
+      const date = new Date();
+      date.setMonth(date.getMonth() + 1);
+      const createEventDto: CreateEventDto = {
+        title: 'New Event',
+        description: 'New Description',
+        location: 'New Location',
+        date,
         capacity: 50,
         price: 25.0,
       };
@@ -148,7 +172,7 @@ describe('EventsService', () => {
 
       const result = await service.create(createEventDto);
 
-      expect(result).toEqual({ error: 'Event creation failed' });
+      expect(result).toEqual({ error: error?.message });
     });
   });
 
@@ -219,7 +243,7 @@ describe('EventsService', () => {
 
       const result = await service.findAll(findEventsDto);
 
-      expect(result).toEqual({ error: 'Error occurred' });
+      expect(result).toEqual({ error: error?.message });
     });
   });
 
