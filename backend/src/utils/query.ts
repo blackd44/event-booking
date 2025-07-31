@@ -16,7 +16,7 @@ export function mergeWhere<T>(
   base: FindOptionsWhere<T> | FindOptionsWhere<T>[],
   extra: FindOptionsWhere<T>,
 ) {
-  if (Array.isArray(base))
+  if (Array.isArray(base) && base?.length > 0)
     return base.map((condition) => ({ ...condition, ...extra }));
 
   return { ...base, ...extra };

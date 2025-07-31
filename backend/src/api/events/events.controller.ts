@@ -83,7 +83,7 @@ export class EventsController {
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Event deleted successfully' })
   async remove(@Param('id') id: string): Promise<void> {
-    return this.eventsService.remove(id);
+    return this.eventsService.delete(id);
   }
 
   @Get(':id/bookings')

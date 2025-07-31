@@ -1,6 +1,7 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsDate, IsNumber, IsPositive, IsString, Min } from 'class-validator';
+import { EventStatus } from 'src/common/enums/event-status.enum';
 import { PaginatorDto } from 'src/utils/paginator';
 
 export class CreateEventDto {
@@ -39,6 +40,9 @@ export class FindEventsDto extends PartialType(PaginatorDto) {
 
   @ApiProperty({ required: false })
   max_date?: string;
+
+  @ApiProperty({ required: false })
+  status?: EventStatus;
 
   @ApiProperty({ required: false })
   q?: string;

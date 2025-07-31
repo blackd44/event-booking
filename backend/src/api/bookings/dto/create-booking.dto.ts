@@ -20,6 +20,9 @@ export class FindBookingDto extends PartialType(PaginatorDto) {
   @ApiPropertyOptional({ description: 'User ID' })
   user_id?: string;
 
+  @ApiPropertyOptional({ description: 'Event ID' })
+  event_id?: string;
+
   @ApiPropertyOptional({ description: 'get active, cancelled and revenue' })
   show_stats?: boolean;
 

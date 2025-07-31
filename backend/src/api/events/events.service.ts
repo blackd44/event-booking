@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEventDto, FindEventsDto, UpdateEventDto } from './dto/event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { Events } from './entities/event.entity';
 import { errorMessage } from 'src/utils/error';
 import { PaginatorResponse, Paginators } from 'src/utils/paginator';
@@ -9,6 +9,7 @@ import { getMinMaxFilter, mergeWhere } from 'src/utils/query';
 import { Booking } from '../bookings/entities/booking.entity';
 import { BookingStatus } from 'src/common/enums/booking-status.enum';
 import moment from 'moment';
+import { EventStatus } from 'src/common/enums/event-status.enum';
 
 @Injectable()
 export class EventsService {
@@ -17,6 +18,7 @@ export class EventsService {
     private eventRepository: Repository<Events>,
     @InjectRepository(Booking)
     private bookingRepository: Repository<Booking>,
+    private dataSource: DataSource,
   ) {}
 
   async create(createEventDto: CreateEventDto) {
@@ -35,11 +37,11 @@ export class EventsService {
 
   async findAll(params: FindEventsDto) {
     try {
-      const { min_date, max_date, q } = params;
+      const { min_date, max_date, status, q } = params;
 
       const { skip, limit, sorts } = Paginators({
         ...params,
-        sort_by: params?.sort_by || 'date',
+        sort_by: params?.sort_by || '-date',
       });
 
       let minDate = min_date ? moment(min_date).toDate() : null;
@@ -72,6 +74,7 @@ export class EventsService {
 
       const normalWhere: FindOptionsWhere<Events> = {
         ...(dateFilter ? { date: dateFilter } : {}),
+        ...(status ? { status } : {}),
       };
       const where = mergeWhere(searchWhere, normalWhere);
 
@@ -121,7 +124,24 @@ export class EventsService {
     return this.eventRepository.save(event);
   }
 
-  async remove(id: string): Promise<void> {
+  async delete(id: string) {
+    const { event } = await this.findOne(id);
+
+    if (!event) throw new NotFoundException('Event not found');
+
+    event.status = EventStatus.CANCELLED;
+
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(
+        Booking,
+        { event: { id } },
+        { status: BookingStatus.CANCELLED },
+      );
+      await manager.update(Events, { id }, { status: EventStatus.CANCELLED });
+    });
+  }
+
+  async remove(id: string) {
     const { event } = await this.findOne(id);
     await this.eventRepository.remove(event);
   }

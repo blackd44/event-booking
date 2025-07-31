@@ -94,11 +94,12 @@ export class BookingsService {
 
   async findAll(params: FindBookingDto) {
     try {
-      const { user_id, show_stats, status, q } = params;
+      const { user_id, event_id, show_stats, status, q } = params;
       const { skip, limit, sorts } = Paginators(params);
 
       const baseWhere: FindOptionsWhere<Booking> = {
         ...(user_id ? { user: { id: user_id } } : {}),
+        ...(event_id ? { event: { id: event_id } } : {}),
         ...(status ? { status } : {}),
       };
       const searchWhere: FindOptionsWhere<Booking>[] = q

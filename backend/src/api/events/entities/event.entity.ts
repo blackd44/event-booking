@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Booking } from 'src/api/bookings/entities/booking.entity';
+import { EventStatus } from 'src/common/enums/event-status.enum';
 
 @Entity('events')
 export class Events {
@@ -34,6 +35,12 @@ export class Events {
   @ApiProperty({ description: 'Maximum capacity' })
   @Column('int')
   capacity!: number;
+
+  @ApiProperty({
+    description: `Event status, ${Object.values(EventStatus).join(' | ')}`,
+  })
+  @Column({ type: String, default: EventStatus.CONFIRMED })
+  status!: EventStatus;
 
   @ApiProperty({ description: 'Ticket price' })
   @Column('decimal', { precision: 10, scale: 2 })
