@@ -19,6 +19,8 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
+  AlertTriangle,
+  DollarSign,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,9 +29,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { useDeleteEvent, useEvents } from "@/services/events";
+import { useDeleteEvent, useEvents, type IEvent } from "@/services/events";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import moment from "moment";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function AdminEventsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,6 +48,15 @@ export default function AdminEventsPage() {
 
   const { data: events, isLoading, error } = useEvents({ q: debouncedQ });
   const deleteEventMutation = useDeleteEvent();
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<IEvent | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteClick = (event: IEvent) => {
+    setEventToDelete(event);
+    setDeleteDialogOpen(true);
+  };
 
   // Handle API errors
   useEffect(() => {
@@ -50,10 +69,18 @@ export default function AdminEventsPage() {
     }
   }, [error, toast]);
 
-  const deleteEvent = async (eventId: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
+  const confirmDeleteEvent = async () => {
+    if (!eventToDelete) return;
 
-    deleteEventMutation.mutate(eventId);
+    setDeleting(true);
+    try {
+      await deleteEventMutation?.mutateAsync(eventToDelete?.id);
+      setDeleteDialogOpen(false);
+    } catch {
+      //  error
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -161,14 +188,12 @@ export default function AdminEventsPage() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => deleteEvent(event.id)}
+                              onClick={() => handleDeleteClick(event)}
                               className="text-red-600 focus:text-red-600"
-                              disabled={deleteEventMutation.isPending}
+                              disabled={deleting}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              {deleteEventMutation.isPending
-                                ? "Deleting..."
-                                : "Delete"}
+                              {deleting ? "Deleting..." : "Delete"}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -201,21 +226,25 @@ export default function AdminEventsPage() {
                     <div className="text-lg font-semibold text-primary-600">
                       ${event.price}
                     </div>
-                    <Badge
-                      variant={
-                        moment(event.date).isBefore(moment())
-                          ? "secondary"
-                          : bookedCount >= event.capacity
-                          ? "destructive"
-                          : "default"
-                      }
-                    >
-                      {moment(event.date).isBefore(moment())
-                        ? "Past Event"
-                        : bookedCount >= event.capacity
-                        ? "Sold Out"
-                        : "Available"}
-                    </Badge>
+                    <div className="flex gap-2 flex-wrap">
+                      {moment(event.date).isBefore(moment()) && (
+                        <Badge variant="secondary">Past Event</Badge>
+                      )}
+                      {(bookedCount >= event.capacity ||
+                        moment(event.date).isAfter(moment())) && (
+                        <Badge
+                          variant={
+                            bookedCount >= event.capacity
+                              ? "destructive"
+                              : "default"
+                          }
+                        >
+                          {bookedCount >= event.capacity
+                            ? "Sold Out"
+                            : "Available"}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
@@ -234,6 +263,102 @@ export default function AdminEventsPage() {
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-red-600">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Delete Event
+            </DialogTitle>
+            <DialogDescription className="text-left">
+              Are you sure you want to permanently delete{" "}
+              <span className="font-semibold text-gray-900">
+                {eventToDelete?.title}
+              </span>
+              ?
+            </DialogDescription>
+          </DialogHeader>
+
+          {eventToDelete && (
+            <div className="bg-gray-50 rounded-lg p-4 my-4">
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center text-gray-600">
+                  <Calendar className="h-4 w-4 mr-2 text-primary-500" />
+                  <span>
+                    {new Date(eventToDelete.date).toLocaleDateString("en-US", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <MapPin className="h-4 w-4 mr-2 text-primary-500" />
+                  <span>{eventToDelete.location}</span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <Users className="h-4 w-4 mr-2 text-primary-500" />
+                  <span>
+                    {eventToDelete.capacity - eventToDelete.availableSpots} /{" "}
+                    {eventToDelete.capacity} attendees
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <DollarSign className="h-4 w-4 mr-2 text-primary-500" />
+                  <span className="font-semibold text-primary-600">
+                    ${eventToDelete.price}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-sm text-red-800">
+              <strong>Warning:</strong> This action cannot be undone. All
+              bookings for this event will be cancelled and attendees will be
+              notified.
+            </p>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setEventToDelete(null);
+              }}
+              disabled={deleting}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteEvent}
+              disabled={deleting}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+            >
+              {deleting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Yes, Delete Event
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

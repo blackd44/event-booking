@@ -41,6 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import moment from "moment";
 
 export default function CustomerBookingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,6 +77,7 @@ export default function CustomerBookingsPage() {
     setCancelling(true);
     try {
       await cancelBookingMutation?.mutateAsync(bookingToCancel?.id);
+      setCancelDialogOpen(false);
     } catch {
       //  error
     } finally {
@@ -243,29 +245,23 @@ export default function CustomerBookingsPage() {
                     </CardDescription>
                   </div>
                   <div className="flex items-center space-x-2">
+                    {moment().isAfter(booking?.event?.date) ? (
+                      <Badge variant="secondary">Past Event</Badge>
+                    ) : (
+                      moment(booking?.event?.date).isSame(moment(), "day") && (
+                        <Badge variant="default">Today</Badge>
+                      )
+                    )}
                     <Badge
                       variant={
                         booking.status === BookingStatus.confirmed
                           ? "default"
-                          : "secondary"
+                          : "destructive"
                       }
                       className="capitalize"
                     >
                       {booking.status}
                     </Badge>
-                    {booking.status === BookingStatus.confirmed &&
-                      new Date(booking.event.date) > new Date() && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCancelClick(booking)}
-                          disabled={cancelBookingMutation?.isPending}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      )}
                   </div>
                 </div>
               </CardHeader>
@@ -305,8 +301,21 @@ export default function CustomerBookingsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end">
-                    <Button variant="outline" asChild>
+                  <div className="flex items-center justify-end gap-2 flex-wrap">
+                    {booking.status === BookingStatus.confirmed &&
+                      new Date(booking.event.date) > new Date() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCancelClick(booking)}
+                          disabled={cancelBookingMutation?.isPending}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Cancel
+                        </Button>
+                      )}
+                    <Button size="sm" variant="outline" asChild>
                       <Link to={`/events/${booking.event.id}`}>View Event</Link>
                     </Button>
                   </div>

@@ -20,12 +20,24 @@ export interface IEvent {
   availableSpots: number;
 }
 
-export function useEvents({ q }: { q?: string } = {}) {
+export function useEvents({
+  q,
+  min_date,
+  max_date,
+}: { q?: string; min_date?: string; max_date?: string } = {}) {
   return useQuery({
-    queryKey: ["events", q],
+    queryKey: ["events", q, min_date, max_date],
     queryFn: () =>
       baseInstance
-        .get<TPaginateRes<IEvent>>("/events", { params: { q } })
+        .get<TPaginateRes<IEvent>>("/events", {
+          params: {
+            q,
+            min_date,
+            max_date,
+            status: "confirmed",
+            sort_by: "-createdAt",
+          },
+        })
         .then((res) => res?.data),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
@@ -65,9 +77,11 @@ export const useDeleteEvent = () => {
     mutationFn: async (eventId: string) => {
       await baseInstance.delete(`/events/${eventId}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "events"] });
+    onSuccess: (_, id) => {
       toast({ title: "Success", description: "Event deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["event", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "events"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
     onError: (err: unknown) => {
       const message = handleError(err, "Failed to delete event", true);

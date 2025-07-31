@@ -6,16 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Mail, Calendar, MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Search, Mail, Calendar } from "lucide-react";
 import { useUsers } from "@/services/users";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
@@ -90,9 +83,9 @@ export default function AdminUsersPage() {
                   <th className="text-left py-3 px-4 font-medium text-gray-600">
                     Status
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">
+                  {/* <th className="text-left py-3 px-4 font-medium text-gray-600">
                     Actions
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody>
@@ -153,7 +146,7 @@ export default function AdminUsersPage() {
                         {user.status}
                       </Badge>
                     </td>
-                    <td className="py-4 px-4">
+                    {/* <td className="py-4 px-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
@@ -170,7 +163,7 @@ export default function AdminUsersPage() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>

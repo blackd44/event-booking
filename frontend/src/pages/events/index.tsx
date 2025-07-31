@@ -11,11 +11,13 @@ import { Calendar, MapPin, Users, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useEvents } from "@/services/events";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import moment from "moment";
 
 export default function EventsPage() {
   const { toast } = useToast();
-  const { data, isLoading, error } = useEvents();
+  const min_date = useMemo(() => moment().format("YYYY-MM-DD"), []);
+  const { data, isLoading, error } = useEvents({ min_date });
 
   useEffect(() => {
     if (error)
@@ -54,9 +56,19 @@ export default function EventsPage() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-xl">{event.title}</CardTitle>
-                  {event.availableSpots <= 0 && (
-                    <Badge variant="destructive">Sold Out</Badge>
-                  )}
+                  <div className="flex gap-2 flex-wrap">
+                    {moment().isAfter(event.date) ? (
+                      <Badge variant="secondary">Past Event</Badge>
+                    ) : (
+                      moment(event.date).format("YYYY-MM-DD") ==
+                        moment().format("YYYY-MM-DD") && (
+                        <Badge variant="default">Today</Badge>
+                      )
+                    )}
+                    {event.availableSpots <= 0 && (
+                      <Badge variant="destructive">Sold Out</Badge>
+                    )}
+                  </div>
                 </div>
                 <CardDescription className="line-clamp-2">
                   {event.description}

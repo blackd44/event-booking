@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEvent } from "@/services/events";
 import { useCreateBooking } from "@/services/booking";
 import { useEffect, useMemo } from "react";
+import moment from "moment";
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -70,6 +71,7 @@ export default function EventDetailsPage() {
 
   const isEventFull = bookedCount >= event.capacity;
   const isEventPast = new Date(event.date) < new Date();
+  const isToday = moment(event.date).isSame(new Date(), "day");
   const isBookingDisabled =
     createBookingMutation.isPending ||
     isEventFull ||
@@ -98,8 +100,13 @@ export default function EventDetailsPage() {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="text-3xl">{event.title}</CardTitle>
-                {isEventFull && <Badge variant="destructive">Sold Out</Badge>}
-                {isEventPast && <Badge variant="secondary">Past Event</Badge>}
+                <div className="flex gap-2 flex-wrap">
+                  {isToday && !isEventPast && (
+                    <Badge variant="default">Today</Badge>
+                  )}
+                  {isEventFull && <Badge variant="destructive">Sold Out</Badge>}
+                  {isEventPast && <Badge variant="secondary">Past Event</Badge>}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">

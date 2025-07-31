@@ -66,18 +66,20 @@ export function useBookingsAll({
   show_stats,
   status,
   user_id,
+  event_id,
   q,
 }: {
   show_stats?: boolean;
   user_id?: string;
+  event_id?: string;
   status?: EBookingStatus;
   q?: string;
 } = {}) {
   return useQuery({
-    queryKey: ["bookings", show_stats, status, user_id, q],
+    queryKey: ["bookings", show_stats, status, user_id, event_id, q],
     queryFn: async () => {
       const response = await baseInstance.get<TBookingRes>("/bookings/all", {
-        params: { show_stats, status, user_id, q },
+        params: { show_stats, status, user_id, event_id, q },
       });
       return response.data;
     },

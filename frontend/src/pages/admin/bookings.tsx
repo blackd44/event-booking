@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import {
   Mail,
   Filter,
   Ticket,
+  X,
 } from "lucide-react";
 import {
   Select,
@@ -27,11 +28,18 @@ import {
 import { useBookingsAll } from "@/services/booking";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { BookingStatus, type EBookingStatus } from "@/types/enums";
+import { useSearchParams } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export default function AdminBookingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<EBookingStatus | "all">(
     "all"
+  );
+  const [searchParams, setSearchParams] = useSearchParams();
+  const event_id = useMemo(
+    () => searchParams.get("eventId") || undefined,
+    [searchParams]
   );
 
   const debuncedQ = useDebouncedValue(searchTerm, 400);
@@ -39,6 +47,7 @@ export default function AdminBookingsPage() {
   const { data } = useBookingsAll({
     q: debuncedQ,
     show_stats: true,
+    event_id,
     status: statusFilter == "all" ? undefined : statusFilter,
   });
 
@@ -53,6 +62,31 @@ export default function AdminBookingsPage() {
           <p className="text-gray-600 mt-2">
             View and manage all event bookings
           </p>
+          {event_id && (
+            <p
+              className={cn(
+                "flex flex-wrap gap-1 items-center",
+                "bg-border rounded-full w-fit pl-2 pr-0.5 mt-2"
+              )}
+            >
+              <span>Event:</span>
+              <span className="font-bold">
+                {data?.results?.[0]?.event?.title},
+              </span>
+              <small className="font-bold">
+                ({data?.results?.[0]?.event?.location})
+              </small>
+              <X
+                className="size-5 p-1 text-red-600 rounded-full bg-secondary cursor-pointer"
+                onClick={() =>
+                  setSearchParams((p) => {
+                    p.delete("eventId");
+                    return p;
+                  })
+                }
+              />
+            </p>
+          )}
         </div>
         {/* <Button className="bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 shadow-lg">
           <Download className="h-4 w-4 mr-2" />
@@ -120,7 +154,9 @@ export default function AdminBookingsPage() {
               <SelectContent>
                 <SelectItem value={"all"}>All Status</SelectItem>
                 {Object.values(BookingStatus).map((status) => (
-                  <SelectItem value={status}>{status}</SelectItem>
+                  <SelectItem value={status} key={status}>
+                    {status}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
