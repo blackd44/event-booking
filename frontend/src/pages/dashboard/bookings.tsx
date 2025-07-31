@@ -25,11 +25,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { useBookingsAll, useCancelBooking } from "@/services/booking";
+import {
+  useBookingsAll,
+  useCancelBooking,
+  type IBooking,
+} from "@/services/booking";
 import { Link } from "react-router-dom";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { BookingStatus, type EBookingStatus } from "@/types/enums";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function CustomerBookingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,7 +48,10 @@ export default function CustomerBookingsPage() {
   const [statusFilter, setStatusFilter] = useState<EBookingStatus | "all">(
     "all"
   );
-  const { toast } = useToast();
+
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<IBooking | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   // React Query hooks
   const {
@@ -51,22 +65,21 @@ export default function CustomerBookingsPage() {
   });
   const cancelBookingMutation = useCancelBooking();
 
-  const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm("Are you sure you want to cancel this booking?")) return;
+  const handleCancelClick = (booking: IBooking) => {
+    setBookingToCancel(booking);
+    setCancelDialogOpen(true);
+  };
 
+  const confirmCancelBooking = async () => {
+    if (!bookingToCancel) return;
+
+    setCancelling(true);
     try {
-      await cancelBookingMutation.mutateAsync(bookingId);
-      toast({
-        title: "Success",
-        description: "Booking cancelled successfully",
-      });
-    } catch (error: unknown) {
-      toast({
-        title: "Error",
-        description:
-          (error as { message: string })?.message || "Failed to cancel booking",
-        variant: "destructive",
-      });
+      await cancelBookingMutation?.mutateAsync(bookingToCancel?.id);
+    } catch {
+      //  error
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -123,7 +136,7 @@ export default function CustomerBookingsPage() {
             <div className="text-2xl font-bold text-green-600">
               {loading ? "..." : bookings?.stats?.confirmed}
             </div>
-            <p className="text-sm text-gray-600">Comfirmed Bookings</p>
+            <p className="text-sm text-gray-600">Confirmed Bookings</p>
           </CardContent>
         </Card>
         <Card className="shadow-elegant border-0">
@@ -170,7 +183,9 @@ export default function CustomerBookingsPage() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 {Object.values(BookingStatus).map((status) => (
-                  <SelectItem value={status}>{status}</SelectItem>
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -243,14 +258,12 @@ export default function CustomerBookingsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleCancelBooking(booking.id)}
-                          disabled={cancelBookingMutation.isPending}
+                          onClick={() => handleCancelClick(booking)}
+                          disabled={cancelBookingMutation?.isPending}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <X className="h-4 w-4 mr-1" />
-                          {cancelBookingMutation.isPending
-                            ? "Cancelling..."
-                            : "Cancel"}
+                          Cancel
                         </Button>
                       )}
                   </div>
@@ -303,6 +316,97 @@ export default function CustomerBookingsPage() {
           ))}
         </div>
       )}
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-red-600">
+              <X className="h-5 w-5 mr-2" />
+              Cancel Booking
+            </DialogTitle>
+            <DialogDescription className="text-left">
+              Are you sure you want to cancel your booking for{" "}
+              <span className="font-semibold text-gray-900">
+                {bookingToCancel?.event.title}
+              </span>
+              ?
+            </DialogDescription>
+          </DialogHeader>
+
+          {bookingToCancel && (
+            <div className="bg-gray-50 rounded-lg p-4 my-4">
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center text-gray-600">
+                  <Calendar className="h-4 w-4 mr-2 text-primary-500" />
+                  <span>
+                    {new Date(bookingToCancel.event.date).toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <MapPin className="h-4 w-4 mr-2 text-primary-500" />
+                  <span>{bookingToCancel.event.location}</span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <Ticket className="h-4 w-4 mr-2 text-primary-500" />
+                  <span className="font-semibold text-primary-600">
+                    ${bookingToCancel.event.price}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> This action cannot be undone. You may need
+              to contact support for refund information.
+            </p>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCancelDialogOpen(false);
+                setBookingToCancel(null);
+              }}
+              disabled={cancelling}
+              className="w-full sm:w-auto"
+            >
+              Keep Booking
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmCancelBooking}
+              disabled={cancelling}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+            >
+              {cancelling ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Cancelling...
+                </>
+              ) : (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Yes, Cancel Booking
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

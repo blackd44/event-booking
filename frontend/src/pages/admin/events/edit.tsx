@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEvent, useUpdateEvent } from "@/services/events";
 import { formatDateTimeForInput } from "@/lib/format-date";
 
-const editEventSchema = z.object({
+const editEventSchemaDefault = z.object({
   title: z
     .string()
     .min(1, "Event title is required")
@@ -32,12 +32,24 @@ const editEventSchema = z.object({
     .string()
     .min(1, "Location is required")
     .max(200, "Location must be less than 200 characters"),
-  date: z.string().min(1, "Date and time is required"),
+  date: z
+    .string()
+    .min(1, "Date and time is required")
+    .refine(
+      (date) => {
+        const selectedDate = new Date(date);
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        return selectedDate >= tomorrow;
+      },
+      { message: "Event date must be tomorrow or later" }
+    ),
   capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
   price: z.coerce.number().min(0, "Price cannot be negative"),
 });
 
-export type EditEventFormData = z.infer<typeof editEventSchema>;
+export type EditEventFormData = z.infer<typeof editEventSchemaDefault>;
 
 export default function EditEventPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +58,19 @@ export default function EditEventPage() {
 
   const { data: event, isLoading, error } = useEvent(id!);
   const updateEventMutation = useUpdateEvent(id!);
+
+  const bookedCount = useMemo(
+    () => (Number(event?.capacity) || 0) - (Number(event?.availableSpots) || 0),
+    [event?.availableSpots, event?.capacity]
+  );
+
+  const editEventSchema = useMemo(() => {
+    return editEventSchemaDefault.extend({
+      capacity: z.coerce
+        .number()
+        .min(bookedCount || 1, `Capacity must be at least ${bookedCount || 1}`),
+    });
+  }, [bookedCount]);
 
   const {
     register,
@@ -65,11 +90,6 @@ export default function EditEventPage() {
       price: 0,
     },
   });
-
-  const bookedCount = useMemo(
-    () => (Number(event?.capacity) || 0) - (Number(event?.availableSpots) || 0),
-    [event?.availableSpots, event?.capacity]
-  );
 
   // Populate form when event data loads
   useEffect(() => {
@@ -97,7 +117,7 @@ export default function EditEventPage() {
 
   const onSubmit = (data: EditEventFormData) => {
     // Check if capacity is being reduced below current bookings
-    if (event && event?.availableSpots >= 0) {
+    if (event && bookedCount > (Number(data.capacity) || 0)) {
       toast({
         title: "Invalid Capacity",
         description: `Capacity cannot be less than current bookings (${

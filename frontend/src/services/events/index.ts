@@ -67,19 +67,11 @@ export const useDeleteEvent = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "events"] });
-      toast({
-        title: "Success",
-        description: "Event deleted successfully",
-      });
+      toast({ title: "Success", description: "Event deleted successfully" });
     },
     onError: (err: unknown) => {
       const message = handleError(err, "Failed to delete event", true);
-
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: message, variant: "destructive" });
     },
   });
 };
@@ -143,33 +135,26 @@ export const useUpdateEvent = (id: string) => {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: async (data: EditEventFormData): Promise<Event> => {
+    mutationFn: async (data: EditEventFormData) => {
       const payload: UpdateEventPayload = data;
-      const response = await baseInstance.patch<Event>(
+      const response = await baseInstance.patch<IEvent>(
         `/events/${id}`,
         payload,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
       return response.data;
     },
-    onSuccess: (updatedEvent) => {
-      // Update cache with new data
-      queryClient.setQueryData(["event", id], updatedEvent);
+    onSuccess: () => {
       // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ["event", id] });
       queryClient.invalidateQueries({ queryKey: ["admin", "events"] });
       queryClient.invalidateQueries({ queryKey: ["events"] });
 
-      toast({
-        title: "Success",
-        description: "Event updated successfully!",
-      });
+      toast({ title: "Success", description: "Event updated successfully!" });
       navigate("/admin/events");
     },
     onError: (error: unknown) => {
       const errorMessage = handleError(error, "Failed to update event", true);
-
       toast({
         title: "Error",
         description: errorMessage,

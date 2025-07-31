@@ -29,6 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useDeleteEvent, useEvents } from "@/services/events";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import moment from "moment";
 
 export default function AdminEventsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -130,7 +131,7 @@ export default function AdminEventsPage() {
 
             return (
               <Card
-                key={event.id}
+                key={event?.id}
                 className="shadow-elegant border-0 hover:shadow-elegant-lg transition-all duration-300"
               >
                 <CardHeader>
@@ -146,27 +147,31 @@ export default function AdminEventsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link to={`/admin/events/${event.id}/edit`}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to={`/admin/events/${event.id}/bookings`}>
+                          <Link to={`/admin/bookings?eventId=${event.id}`}>
                             <Users className="h-4 w-4 mr-2" />
                             View Bookings
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => deleteEvent(event.id)}
-                          className="text-red-600 focus:text-red-600"
-                          disabled={deleteEventMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {deleteEventMutation.isPending
-                            ? "Deleting..."
-                            : "Delete"}
-                        </DropdownMenuItem>
+                        {moment(event.date).isAfter(moment()) && (
+                          <>
+                            <DropdownMenuItem asChild>
+                              <Link to={`/admin/events/${event.id}/edit`}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => deleteEvent(event.id)}
+                              className="text-red-600 focus:text-red-600"
+                              disabled={deleteEventMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              {deleteEventMutation.isPending
+                                ? "Deleting..."
+                                : "Delete"}
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -198,12 +203,18 @@ export default function AdminEventsPage() {
                     </div>
                     <Badge
                       variant={
-                        bookedCount >= event.capacity
+                        moment(event.date).isBefore(moment())
+                          ? "secondary"
+                          : bookedCount >= event.capacity
                           ? "destructive"
                           : "default"
                       }
                     >
-                      {bookedCount >= event.capacity ? "Sold Out" : "Available"}
+                      {moment(event.date).isBefore(moment())
+                        ? "Past Event"
+                        : bookedCount >= event.capacity
+                        ? "Sold Out"
+                        : "Available"}
                     </Badge>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">

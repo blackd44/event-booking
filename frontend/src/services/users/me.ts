@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { baseInstance } from "../axios";
 import { handleError } from "@/lib/error";
 import type { ERole, EUserStatus } from "@/types/enums";
+import { useToast } from "@/hooks/use-toast";
 
 // types
 export interface IMe {
@@ -52,6 +53,7 @@ export function useMe() {
 export function useLogin() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (credentials: ILoginRequest) => {
@@ -87,7 +89,17 @@ export function useLogin() {
       queryClient.setQueryData(["auth", "me"], data.user);
       navigate(data.user.role === "admin" ? "/admin" : "/dashboard");
     },
-    onError: (err) => handleError(err, "Login failed"),
+    onError: (err) => {
+      const error = handleError(err, "Failed to book ticket", true);
+      toast({
+        title: "Error",
+        description:
+          error?.toLowerCase() == "unauthorized"
+            ? "Email or Password is incorrect"
+            : error,
+        variant: "destructive",
+      });
+    },
   });
 }
 
@@ -95,6 +107,7 @@ export function useLogin() {
 export function useRegister() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: (data: IRegisterRequest) =>
@@ -106,7 +119,10 @@ export function useRegister() {
       queryClient.setQueryData(["auth", "me"], data.user);
       navigate(data.user.role === "admin" ? "/admin" : "/dashboard");
     },
-    onError: (err) => handleError(err, "Registration failed"),
+    onError: (err) => {
+      const error = handleError(err, "Registration failed", true);
+      toast({ title: "Error", description: error, variant: "destructive" });
+    },
   });
 }
 

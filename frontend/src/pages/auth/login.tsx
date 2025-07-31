@@ -84,7 +84,10 @@ export default function LoginPage() {
         <CardContent className="space-y-6">
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(handleSubmit)}
+              onSubmit={(e) => {
+                e.preventDefault?.();
+                form.handleSubmit(handleSubmit)?.(e);
+              }}
               className="space-y-5"
             >
               <FormField
@@ -152,9 +155,9 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full h-12 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
-                disabled={loginMutation.isPending}
+                disabled={loginMutation?.isPending}
               >
-                {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                {loginMutation?.isPending ? "Signing In..." : "Sign In"}
               </Button>
             </form>
           </Form>

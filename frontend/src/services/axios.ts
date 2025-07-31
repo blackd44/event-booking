@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 export const apiUrl = import.meta.env.VITE_API_URL;
 export const baseInstance = axios.create({
@@ -19,8 +19,11 @@ baseInstance.interceptors.request.use((config) => {
 // Handle token expiration
 baseInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  (error: AxiosError) => {
+    if (
+      !`${error?.request?.responseURL}`?.includes("/auth/login") &&
+      error?.response?.status === 401
+    ) {
       localStorage.removeItem("token");
       window.location.href = "/";
     }

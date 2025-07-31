@@ -16,24 +16,17 @@ export function useCreateBooking() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: IBookingRequest): Promise<void> => {
-      const token = localStorage.getItem("token");
-      await baseInstance.post("/bookings", data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    },
+    mutationFn: async (data: IBookingRequest) =>
+      baseInstance.post("/bookings", data),
     onSuccess: (_, variables) => {
-      toast({
-        title: "Success",
-        description: "Ticket booked successfully!",
-      });
-
+      toast({ title: "Success", description: "Ticket booked successfully!" });
       // refetch the event data
       queryClient.invalidateQueries({ queryKey: ["event", variables.eventId] });
     },
-    onError: (err) => handleError(err, "Failed to book ticket"),
+    onError: (err) => {
+      const error = handleError(err, "Failed to book ticket", true);
+      toast({ title: "Error", description: error, variant: "destructive" });
+    },
   });
 }
 
@@ -95,6 +88,7 @@ export function useBookingsAll({
 
 export function useCancelBooking() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (bookingId: string) => {
@@ -105,8 +99,15 @@ export function useCancelBooking() {
     },
     onSuccess: () => {
       // refetch bookings data
+      toast({
+        title: "Success",
+        description: "Booking cancelled successfully",
+      });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
     },
-    onError: (err) => handleError(err, "Failed to cancel booking"),
+    onError: (err) => {
+      const error = handleError(err, "Failed to cancel booking", true);
+      toast({ title: "Error", description: error, variant: "destructive" });
+    },
   });
 }
